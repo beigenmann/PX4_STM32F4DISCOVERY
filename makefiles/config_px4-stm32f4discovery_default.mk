@@ -6,7 +6,8 @@
 # Use the configuration's ROMFS, copy the px4iov2 firmware into
 # the ROMFS if it's available
 #
-ROMFS_ROOT	 = $(PX4_BASE)/ROMFS/px4fmu_common
+#ROMFS_ROOT	 = $(PX4_BASE)/ROMFS/px4fmu_common
+ROMFS_ROOT      = $(PX4_BASE)/ROMFS/px4fmu_test
 ROMFS_OPTIONAL_FILES = 
 
 #
