@@ -115,6 +115,8 @@
 __EXPORT void
 stm32_boardinitialize(void)
 {
+	/* configure SPI interfaces */
+	stm32_spiinitialize();
 	/* configure LEDs */
 	up_ledinit();
 }
@@ -143,6 +145,12 @@ __EXPORT int matherr(struct exception *e)
 
 __EXPORT int nsh_archinitialize(void)
 {
+	int result;
+
+	/* configure always-on ADC pins */
+	stm32_configgpio(GPIO_ADC1_IN10);
+	stm32_configgpio(GPIO_ADC1_IN11);
+	/* IN12 and IN13 further below */
 
 	/* configure the high-resolution time/callout interface */
 	hrt_init();
