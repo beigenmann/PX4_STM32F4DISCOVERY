@@ -216,3 +216,22 @@ __EXPORT uint8_t stm32_spi4status(FAR struct spi_dev_s *dev, enum spi_dev_e devi
 {
 	return SPI_STATUS_PRESENT;
 }
+
+__EXPORT uint8_t stm32_spi2status(FAR struct spi_dev_s *dev, enum spi_dev_e devid)
+{
+	return SPI_STATUS_PRESENT;
+}
+
+
+__EXPORT void stm32_spi3select(FAR struct spi_dev_s *dev, enum spi_dev_e devid, bool selected)
+{
+	/* there can only be one device on this bus, so always select it */
+	stm32_gpiowrite(GPIO_SPI_CS_SDCARD, !selected);
+}
+
+__EXPORT uint8_t stm32_spi3status(FAR struct spi_dev_s *dev, enum spi_dev_e devid)
+{
+	/* this is actually bogus, but PX4 has no way to sense the presence of an SD card */
+	return SPI_STATUS_PRESENT;
+}
+

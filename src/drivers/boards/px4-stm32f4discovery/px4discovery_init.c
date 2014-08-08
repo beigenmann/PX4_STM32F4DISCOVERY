@@ -72,7 +72,6 @@
 #include <systemlib/cpuload.h>
 #include <systemlib/perf_counter.h>
 
-
 /****************************************************************************
  * Pre-Processor Definitions
  ****************************************************************************/
@@ -94,7 +93,6 @@
 #    define message printf
 #  endif
 #endif
-
 
 /****************************************************************************
  * Protected Functions
@@ -124,9 +122,9 @@ static void
 dma_alloc_init(void)
 {
 	dma_allocator = gran_initialize(g_dma_heap,
-					sizeof(g_dma_heap),
-					7,  /* 128B granule - must be > alignment (XXX bug?) */
-					6); /* 64B alignment */
+			sizeof(g_dma_heap),
+			7, /* 128B granule - must be > alignment (XXX bug?) */
+			6); /* 64B alignment */
 	if (dma_allocator == NULL) {
 		message("[boot] DMA allocator setup FAILED");
 	} else {
@@ -181,9 +179,7 @@ fat_dma_free(FAR void *memory, size_t size)
  *
  ************************************************************************************/
 
-__EXPORT void
-stm32_boardinitialize(void)
-{
+__EXPORT void stm32_boardinitialize(void) {
 	/* configure SPI interfaces */
 	stm32_spiinitialize();
 	/* configure LEDs */
@@ -200,20 +196,23 @@ stm32_boardinitialize(void)
 
 #include <math.h>
 
+static struct spi_dev_s *spi1;
+//static struct spi_dev_s *spi2;
+//static struct spi_dev_s *spi4;
+//static struct sdio_dev_s *sdio;
+
 #ifdef __cplusplus
 __EXPORT int matherr(struct __exception *e)
 {
 	return 1;
 }
 #else
-__EXPORT int matherr(struct exception *e)
-{
+__EXPORT int matherr(struct exception *e) {
 	return 1;
 }
 #endif
 
-__EXPORT int nsh_archinitialize(void)
-{
+__EXPORT int nsh_archinitialize(void) {
 	//int result;
 
 	/* configure always-on ADC pins */
@@ -223,6 +222,7 @@ __EXPORT int nsh_archinitialize(void)
 
 	/* configure the high-resolution time/callout interface */
 	hrt_init();
+	dma_alloc_init();
 
 	/* configure CPU load estimation */
 #ifdef CONFIG_SCHED_INSTRUMENTATION
@@ -240,11 +240,28 @@ __EXPORT int nsh_archinitialize(void)
 	ts.tv_sec = 0;
 	ts.tv_nsec = 1000000;
 
-	hrt_call_every(&serial_dma_call,
-		       ts_to_abstime(&ts),
-		       ts_to_abstime(&ts),
-		       (hrt_callout)stm32_serial_dma_poll,
-		       NULL);
+	hrt_call_every(&serial_dma_call, ts_to_abstime(&ts), ts_to_abstime(&ts),
+			(hrt_callout) stm32_serial_dma_poll,
+			NULL);
+	/* Configure SPI-based devices */
 
+	spi1 = up_spiinitialize(1);
+
+	if (!spi1) {
+		message("[boot] FAILED to initialize SPI port 1\n"); up_ledon(LED_AMBER);
+		return -ENODEV;
+	}
+
+	/* Default SPI1 to 1MHz and de-assert the known chip selects. */
+	SPI_SETFREQUENCY(spi1, 10000000);
+	SPI_SETBITS(spi1, 8);
+	SPI_SETMODE(spi1, SPIDEV_MODE3);
+	SPI_SELECT(spi1, PX4_SPIDEV_GYRO, false);
+	SPI_SELECT(spi1, PX4_SPIDEV_ACCEL_MAG, false);
+	SPI_SELECT(spi1, PX4_SPIDEV_BARO, false);
+	SPI_SELECT(spi1, PX4_SPIDEV_MPU, false);
+	up_udelay(20);
+
+	message("[boot] Initialized SPI port 1 (SENSORS)\n");
 	return OK;
 }
