@@ -15,7 +15,7 @@ ROMFS_OPTIONAL_FILES =
 #
 MODULES		+= drivers/device
 MODULES		+= drivers/stm32
-MODULES         += drivers/stm32/adc
+MODULES     += drivers/stm32/adc
 MODULES		+= drivers/led
 MODULES		+= drivers/boards/px4-stm32f4discovery
 
@@ -33,6 +33,12 @@ MODULES		+= systemcmds/tests
 MODULES		+= systemcmds/config
 MODULES		+= systemcmds/nshterm
 MODULES		+= systemcmds/hw_ver
+
+MODULES		+= systemcmds/preflight_check
+MODULES		+= systemcmds/pwm
+MODULES		+= systemcmds/esc_calib
+MODULES		+= systemcmds/mtd
+MODULES		+= systemcmds/dumpfile
 
 #
 # Library modules

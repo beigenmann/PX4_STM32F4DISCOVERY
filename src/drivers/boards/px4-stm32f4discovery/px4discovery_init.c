@@ -72,6 +72,7 @@
 #include <systemlib/cpuload.h>
 #include <systemlib/perf_counter.h>
 
+
 /****************************************************************************
  * Pre-Processor Definitions
  ****************************************************************************/
@@ -94,6 +95,74 @@
 #  endif
 #endif
 
+
+/****************************************************************************
+ * Protected Functions
+ ****************************************************************************/
+
+#if defined(CONFIG_FAT_DMAMEMORY)
+# if !defined(CONFIG_GRAN) || !defined(CONFIG_FAT_DMAMEMORY)
+#  error microSD DMA support requires CONFIG_GRAN
+# endif
+
+static GRAN_HANDLE dma_allocator;
+
+/*
+ * The DMA heap size constrains the total number of things that can be
+ * ready to do DMA at a time.
+ *
+ * For example, FAT DMA depends on one sector-sized buffer per filesystem plus
+ * one sector-sized buffer per file.
+ *
+ * We use a fundamental alignment / granule size of 64B; this is sufficient
+ * to guarantee alignment for the largest STM32 DMA burst (16 beats x 32bits).
+ */
+static uint8_t g_dma_heap[8192] __attribute__((aligned(64)));
+static perf_counter_t g_dma_perf;
+
+static void
+dma_alloc_init(void)
+{
+	dma_allocator = gran_initialize(g_dma_heap,
+					sizeof(g_dma_heap),
+					7,  /* 128B granule - must be > alignment (XXX bug?) */
+					6); /* 64B alignment */
+	if (dma_allocator == NULL) {
+		message("[boot] DMA allocator setup FAILED");
+	} else {
+		g_dma_perf = perf_alloc(PC_COUNT, "DMA allocations");
+	}
+}
+
+/****************************************************************************
+ * Public Functions
+ ****************************************************************************/
+
+/*
+ * DMA-aware allocator stubs for the FAT filesystem.
+ */
+
+__EXPORT void *fat_dma_alloc(size_t size);
+__EXPORT void fat_dma_free(FAR void *memory, size_t size);
+
+void *
+fat_dma_alloc(size_t size)
+{
+	perf_count(g_dma_perf);
+	return gran_alloc(dma_allocator, size);
+}
+
+void
+fat_dma_free(FAR void *memory, size_t size)
+{
+	gran_free(dma_allocator, memory, size);
+}
+
+#else
+
+# define dma_alloc_init()
+
+#endif
 /****************************************************************************
  * Protected Functions
  ****************************************************************************/
@@ -116,7 +185,7 @@ __EXPORT void
 stm32_boardinitialize(void)
 {
 	/* configure SPI interfaces */
-	//stm32_spiinitialize();
+	stm32_spiinitialize();
 	/* configure LEDs */
 	up_ledinit();
 }
