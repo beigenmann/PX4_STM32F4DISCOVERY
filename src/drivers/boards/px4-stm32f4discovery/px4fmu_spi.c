@@ -162,11 +162,7 @@ __EXPORT void stm32_spi2select(FAR struct spi_dev_s *dev, enum spi_dev_e devid, 
 	stm32_gpiowrite(GPIO_SPI_CS_FRAM, !selected);
 }
 
-__EXPORT uint8_t stm32_spi2status(FAR struct spi_dev_s *dev, enum spi_dev_e devid)
-{
-	/* FRAM is always present */
-	return SPI_STATUS_PRESENT;
-}
+
 #endif
 
 __EXPORT void stm32_spi4select(FAR struct spi_dev_s *dev, enum spi_dev_e devid, bool selected)

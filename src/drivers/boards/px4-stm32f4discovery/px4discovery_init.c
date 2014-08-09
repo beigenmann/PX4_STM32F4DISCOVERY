@@ -191,7 +191,7 @@ __EXPORT void stm32_boardinitialize(void) {
 
 static struct spi_dev_s *spi1;
 static struct spi_dev_s *spi2;
-static struct spi_dev_s *spi4;
+//static struct spi_dev_s *spi4;
 static struct sdio_dev_s *sdio;
 
 #ifdef __cplusplus
@@ -256,6 +256,26 @@ __EXPORT int nsh_archinitialize(void) {
 	up_udelay(20);
 
 	message("[boot] Initialized SPI port 1 (SENSORS)\n");
+
+	spi2 = up_spiinitialize(2);
+
+	if (!spi2) {
+		message("[boot] FAILED to initialize SPI port 2\n");
+		//up_ledon(LED_AMBER);
+		return -ENODEV;
+	}
+
+	/* Default SPI2 to 37.5 MHz (40 MHz rounded to nearest valid divider, F4 max)
+	 * and de-assert the known chip selects. */
+
+	// XXX start with 10.4 MHz in FRAM usage and go up to 37.5 once validated
+	SPI_SETFREQUENCY(spi2, 12 * 1000 * 1000);
+	SPI_SETBITS(spi2, 8);
+	SPI_SETMODE(spi2, SPIDEV_MODE3);
+	SPI_SELECT(spi2, SPIDEV_FLASH, false);
+
+	message("[boot] Initialized SPI port 2 (RAMTRON FRAM)\n");
+
 #ifdef CONFIG_MMCSD
 	/* First, get an instance of the SDIO interface */
 
@@ -279,40 +299,22 @@ __EXPORT int nsh_archinitialize(void) {
 	message("[boot] Initialized SDIO\n");
 #endif
 
-	spi4 = up_spiinitialize(4);
-	if (!spi4) {
-		message("[boot] FAILED to initialize SPI port 1\n");
-		return -ENODEV;
-	}
-
-	/* Default SPI4 to 1MHz and de-assert the known chip selects. */
-	SPI_SETFREQUENCY(spi4, 10000000);
-	SPI_SETBITS(spi4, 8);
-	SPI_SETMODE(spi4, SPIDEV_MODE3);
-	SPI_SELECT(spi4, PX4_SPIDEV_EXT0, false);
-	SPI_SELECT(spi4, PX4_SPIDEV_EXT1, false);
-
-	message("[boot] Initialized SPI port 4\n");
+//	spi4 = up_spiinitialize(4);
+//	if (!spi4) {
+//		message("[boot] FAILED to initialize SPI port 1\n");
+//		return -ENODEV;
+//	}
+//
+//	/* Default SPI4 to 1MHz and de-assert the known chip selects. */
+//	SPI_SETFREQUENCY(spi4, 10000000);
+//	SPI_SETBITS(spi4, 8);
+//	SPI_SETMODE(spi4, SPIDEV_MODE3);
+//	SPI_SELECT(spi4, PX4_SPIDEV_EXT0, false);
+//	SPI_SELECT(spi4, PX4_SPIDEV_EXT1, false);
+//
+//	message("[boot] Initialized SPI port 4\n");
 	/* Get the SPI port for the FRAM */
 
-	spi2 = up_spiinitialize(2);
-
-	if (!spi2) {
-		message("[boot] FAILED to initialize SPI port 2\n");
-		//up_ledon(LED_AMBER);
-		return -ENODEV;
-	}
-
-	/* Default SPI2 to 37.5 MHz (40 MHz rounded to nearest valid divider, F4 max)
-	 * and de-assert the known chip selects. */
-
-	// XXX start with 10.4 MHz in FRAM usage and go up to 37.5 once validated
-	SPI_SETFREQUENCY(spi2, 12 * 1000 * 1000);
-	SPI_SETBITS(spi2, 8);
-	SPI_SETMODE(spi2, SPIDEV_MODE3);
-	SPI_SELECT(spi2, SPIDEV_FLASH, false);
-
-	message("[boot] Initialized SPI port 2 (RAMTRON FRAM)\n");
-
+//
 	return OK;
 }
