@@ -118,13 +118,9 @@ static GRAN_HANDLE dma_allocator;
 static uint8_t g_dma_heap[8192] __attribute__((aligned(64)));
 static perf_counter_t g_dma_perf;
 
-static void
-dma_alloc_init(void)
-{
-	dma_allocator = gran_initialize(g_dma_heap,
-			sizeof(g_dma_heap),
-			7, /* 128B granule - must be > alignment (XXX bug?) */
-			6); /* 64B alignment */
+static void dma_alloc_init(void) {
+	dma_allocator = gran_initialize(g_dma_heap, sizeof(g_dma_heap), 7, /* 128B granule - must be > alignment (XXX bug?) */
+	6); /* 64B alignment */
 	if (dma_allocator == NULL) {
 		message("[boot] DMA allocator setup FAILED");
 	} else {
@@ -144,15 +140,12 @@ __EXPORT void *fat_dma_alloc(size_t size);
 __EXPORT void fat_dma_free(FAR void *memory, size_t size);
 
 void *
-fat_dma_alloc(size_t size)
-{
+fat_dma_alloc(size_t size) {
 	perf_count(g_dma_perf);
 	return gran_alloc(dma_allocator, size);
 }
 
-void
-fat_dma_free(FAR void *memory, size_t size)
-{
+void fat_dma_free(FAR void *memory, size_t size) {
 	gran_free(dma_allocator, memory, size);
 }
 
@@ -246,6 +239,23 @@ __EXPORT int nsh_archinitialize(void) {
 	/* Configure SPI-based devices */
 
 	spi1 = up_spiinitialize(1);
+
+	if (!spi1) {
+		message("[boot] FAILED to initialize SPI port 1\n");up_ledon(LED_AMBER);
+		return -ENODEV;
+	}
+
+	/* Default SPI1 to 1MHz and de-assert the known chip selects. */
+	SPI_SETFREQUENCY(spi1, 10000000);
+	SPI_SETBITS(spi1, 8);
+	SPI_SETMODE(spi1, SPIDEV_MODE3);
+	SPI_SELECT(spi1, PX4_SPIDEV_GYRO, false);
+	SPI_SELECT(spi1, PX4_SPIDEV_ACCEL_MAG, false);
+	SPI_SELECT(spi1, PX4_SPIDEV_BARO, false);
+	SPI_SELECT(spi1, PX4_SPIDEV_MPU, false);
+	up_udelay(20);
+
+	message("[boot] Initialized SPI port 1 (SENSORS)\n");
 #ifdef CONFIG_MMCSD
 	/* First, get an instance of the SDIO interface */
 
@@ -269,28 +279,27 @@ __EXPORT int nsh_archinitialize(void) {
 	message("[boot] Initialized SDIO\n");
 #endif
 
-	if (!spi1) {
-		message("[boot] FAILED to initialize SPI port 1\n");up_ledon(LED_AMBER);
+	spi4 = up_spiinitialize(4);
+	if (!spi4) {
+		message("[boot] FAILED to initialize SPI port 1\n");
 		return -ENODEV;
 	}
 
-	/* Default SPI1 to 1MHz and de-assert the known chip selects. */
-	SPI_SETFREQUENCY(spi1, 10000000);
-	SPI_SETBITS(spi1, 8);
-	SPI_SETMODE(spi1, SPIDEV_MODE3);
-	SPI_SELECT(spi1, PX4_SPIDEV_GYRO, false);
-	SPI_SELECT(spi1, PX4_SPIDEV_ACCEL_MAG, false);
-	SPI_SELECT(spi1, PX4_SPIDEV_BARO, false);
-	SPI_SELECT(spi1, PX4_SPIDEV_MPU, false);
-	up_udelay(20);
+	/* Default SPI4 to 1MHz and de-assert the known chip selects. */
+	SPI_SETFREQUENCY(spi4, 10000000);
+	SPI_SETBITS(spi4, 8);
+	SPI_SETMODE(spi4, SPIDEV_MODE3);
+	SPI_SELECT(spi4, PX4_SPIDEV_EXT0, false);
+	SPI_SELECT(spi4, PX4_SPIDEV_EXT1, false);
 
-	message("[boot] Initialized SPI port 1 (SENSORS)\n");
+	message("[boot] Initialized SPI port 4\n");
 	/* Get the SPI port for the FRAM */
 
 	spi2 = up_spiinitialize(2);
 
 	if (!spi2) {
-		message("[boot] FAILED to initialize SPI port 2\n"); up_ledon(LED_AMBER);
+		message("[boot] FAILED to initialize SPI port 2\n");
+		//up_ledon(LED_AMBER);
 		return -ENODEV;
 	}
 
@@ -304,19 +313,6 @@ __EXPORT int nsh_archinitialize(void) {
 	SPI_SELECT(spi2, SPIDEV_FLASH, false);
 
 	message("[boot] Initialized SPI port 2 (RAMTRON FRAM)\n");
-
-	spi4 = up_spiinitialize(4);
-
-	/* Default SPI4 to 1MHz and de-assert the known chip selects. */
-	SPI_SETFREQUENCY(spi4, 10000000);
-	SPI_SETBITS(spi4, 8);
-	SPI_SETMODE(spi4, SPIDEV_MODE3);
-	SPI_SELECT(spi4, PX4_SPIDEV_EXT0, false);
-	SPI_SELECT(spi4, PX4_SPIDEV_EXT1, false);
-
-	message("[boot] Initialized SPI port 4\n");
-
-
 
 	return OK;
 }
