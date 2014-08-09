@@ -197,9 +197,9 @@ __EXPORT void stm32_boardinitialize(void) {
 #include <math.h>
 
 static struct spi_dev_s *spi1;
-//static struct spi_dev_s *spi2;
-//static struct spi_dev_s *spi4;
-//static struct sdio_dev_s *sdio;
+static struct spi_dev_s *spi2;
+static struct spi_dev_s *spi4;
+static struct sdio_dev_s *sdio;
 
 #ifdef __cplusplus
 __EXPORT int matherr(struct __exception *e)
@@ -248,7 +248,7 @@ __EXPORT int nsh_archinitialize(void) {
 	spi1 = up_spiinitialize(1);
 
 	if (!spi1) {
-		message("[boot] FAILED to initialize SPI port 1\n"); up_ledon(LED_AMBER);
+		message("[boot] FAILED to initialize SPI port 1\n");up_ledon(LED_AMBER);
 		return -ENODEV;
 	}
 
@@ -263,5 +263,59 @@ __EXPORT int nsh_archinitialize(void) {
 	up_udelay(20);
 
 	message("[boot] Initialized SPI port 1 (SENSORS)\n");
+	/* Get the SPI port for the FRAM */
+
+	spi2 = up_spiinitialize(2);
+
+	if (!spi2) {
+		message("[boot] FAILED to initialize SPI port 2\n"); up_ledon(LED_AMBER);
+		return -ENODEV;
+	}
+
+	/* Default SPI2 to 37.5 MHz (40 MHz rounded to nearest valid divider, F4 max)
+	 * and de-assert the known chip selects. */
+
+	// XXX start with 10.4 MHz in FRAM usage and go up to 37.5 once validated
+	SPI_SETFREQUENCY(spi2, 12 * 1000 * 1000);
+	SPI_SETBITS(spi2, 8);
+	SPI_SETMODE(spi2, SPIDEV_MODE3);
+	SPI_SELECT(spi2, SPIDEV_FLASH, false);
+
+	message("[boot] Initialized SPI port 2 (RAMTRON FRAM)\n");
+
+	spi4 = up_spiinitialize(4);
+
+	/* Default SPI4 to 1MHz and de-assert the known chip selects. */
+	SPI_SETFREQUENCY(spi4, 10000000);
+	SPI_SETBITS(spi4, 8);
+	SPI_SETMODE(spi4, SPIDEV_MODE3);
+	SPI_SELECT(spi4, PX4_SPIDEV_EXT0, false);
+	SPI_SELECT(spi4, PX4_SPIDEV_EXT1, false);
+
+	message("[boot] Initialized SPI port 4\n");
+
+#ifdef CONFIG_MMCSD
+	/* First, get an instance of the SDIO interface */
+
+	sdio = sdio_initialize(CONFIG_NSH_MMCSDSLOTNO);
+	if (!sdio) {
+		message("[boot] Failed to initialize SDIO slot %d\n",
+				CONFIG_NSH_MMCSDSLOTNO);
+		return -ENODEV;
+	}
+
+	/* Now bind the SDIO interface to the MMC/SD driver */
+	int ret = mmcsd_slotinitialize(CONFIG_NSH_MMCSDMINOR, sdio);
+	if (ret != OK) {
+		message("[boot] Failed to bind SDIO to the MMC/SD driver: %d\n", ret);
+		return ret;
+	}
+
+	/* Then let's guess and say that there is a card in the slot. There is no card detect GPIO. */
+	sdio_mediachange(sdio, true);
+
+	message("[boot] Initialized SDIO\n");
+#endif
+
 	return OK;
 }

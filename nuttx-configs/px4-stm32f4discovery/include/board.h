@@ -157,6 +157,47 @@
 #define STM32_TIM18_FREQUENCY   (2*STM32_PCLK2_FREQUENCY)
 #define STM32_TIM27_FREQUENCY   (2*STM32_PCLK1_FREQUENCY)
 
+/* SDIO dividers.  Note that slower clocking is required when DMA is disabled
+ * in order to avoid RX overrun/TX underrun errors due to delayed responses
+ * to service FIFOs in interrupt driven mode.  These values have not been
+ * tuned!!!
+ *
+ * HCLK=72MHz, SDIOCLK=72MHz, SDIO_CK=HCLK/(178+2)=400 KHz
+ */
+
+#define SDIO_INIT_CLKDIV        (178 << SDIO_CLKCR_CLKDIV_SHIFT)
+
+/* DMA ON:  HCLK=72 MHz, SDIOCLK=72MHz, SDIO_CK=HCLK/(2+2)=18 MHz
+ * DMA OFF: HCLK=72 MHz, SDIOCLK=72MHz, SDIO_CK=HCLK/(3+2)=14.4 MHz
+ */
+
+#ifdef CONFIG_SDIO_DMA
+#  define SDIO_MMCXFR_CLKDIV    (2 << SDIO_CLKCR_CLKDIV_SHIFT)
+#else
+#  define SDIO_MMCXFR_CLKDIV    (3 << SDIO_CLKCR_CLKDIV_SHIFT)
+#endif
+
+/* DMA ON:  HCLK=72 MHz, SDIOCLK=72MHz, SDIO_CK=HCLK/(1+2)=24 MHz
+ * DMA OFF: HCLK=72 MHz, SDIOCLK=72MHz, SDIO_CK=HCLK/(3+2)=14.4 MHz
+ */
+
+#ifdef CONFIG_SDIO_DMA
+#  define SDIO_SDXFR_CLKDIV     (1 << SDIO_CLKCR_CLKDIV_SHIFT)
+#else
+#  define SDIO_SDXFR_CLKDIV     (3 << SDIO_CLKCR_CLKDIV_SHIFT)
+#endif
+
+/* DMA Channl/Stream Selections *****************************************************/
+/* Stream selections are arbitrary for now but might become important in the future
+ * is we set aside more DMA channels/streams.
+ *
+ * SDIO DMA
+ *   DMAMAP_SDIO_1 = Channel 4, Stream 3 <- may later be used by SPI DMA
+ *   DMAMAP_SDIO_2 = Channel 4, Stream 6
+ */
+
+#define DMAMAP_SDIO DMAMAP_SDIO_1
+
 /* LED definitions ******************************************************************/
 /* If CONFIG_ARCH_LEDS is not defined, then the user can control the LEDs in any
  * way.  The following definitions are used to access individual LEDs.
