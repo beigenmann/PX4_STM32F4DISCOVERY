@@ -246,6 +246,28 @@ __EXPORT int nsh_archinitialize(void) {
 	/* Configure SPI-based devices */
 
 	spi1 = up_spiinitialize(1);
+#ifdef CONFIG_MMCSD
+	/* First, get an instance of the SDIO interface */
+
+	sdio = sdio_initialize(CONFIG_NSH_MMCSDSLOTNO);
+	if (!sdio) {
+		message("[boot] Failed to initialize SDIO slot %d\n",
+				CONFIG_NSH_MMCSDSLOTNO);
+		return -ENODEV;
+	}
+
+	/* Now bind the SDIO interface to the MMC/SD driver */
+	int ret = mmcsd_slotinitialize(CONFIG_NSH_MMCSDMINOR, sdio);
+	if (ret != OK) {
+		message("[boot] Failed to bind SDIO to the MMC/SD driver: %d\n", ret);
+		return ret;
+	}
+
+	/* Then let's guess and say that there is a card in the slot. There is no card detect GPIO. */
+	sdio_mediachange(sdio, true);
+
+	message("[boot] Initialized SDIO\n");
+#endif
 
 	if (!spi1) {
 		message("[boot] FAILED to initialize SPI port 1\n");up_ledon(LED_AMBER);
@@ -294,28 +316,7 @@ __EXPORT int nsh_archinitialize(void) {
 
 	message("[boot] Initialized SPI port 4\n");
 
-#ifdef CONFIG_MMCSD
-	/* First, get an instance of the SDIO interface */
 
-	sdio = sdio_initialize(CONFIG_NSH_MMCSDSLOTNO);
-	if (!sdio) {
-		message("[boot] Failed to initialize SDIO slot %d\n",
-				CONFIG_NSH_MMCSDSLOTNO);
-		return -ENODEV;
-	}
-
-	/* Now bind the SDIO interface to the MMC/SD driver */
-	int ret = mmcsd_slotinitialize(CONFIG_NSH_MMCSDMINOR, sdio);
-	if (ret != OK) {
-		message("[boot] Failed to bind SDIO to the MMC/SD driver: %d\n", ret);
-		return ret;
-	}
-
-	/* Then let's guess and say that there is a card in the slot. There is no card detect GPIO. */
-	sdio_mediachange(sdio, true);
-
-	message("[boot] Initialized SDIO\n");
-#endif
 
 	return OK;
 }
