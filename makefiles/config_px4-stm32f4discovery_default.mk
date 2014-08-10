@@ -18,6 +18,8 @@ MODULES		+= drivers/stm32
 MODULES     += drivers/stm32/adc
 MODULES		+= drivers/led
 MODULES		+= drivers/boards/px4-stm32f4discovery
+MODULES		+= drivers/gps
+
 
 #
 # System commands
