@@ -255,6 +255,21 @@
 
 #define GPIO_UART7_RX	GPIO_UART7_RX_1
 #define GPIO_UART7_TX	GPIO_UART7_TX_1
+
+/* UART RX DMA configurations */
+#define DMAMAP_USART1_RX DMAMAP_USART1_RX_2
+#define DMAMAP_USART6_RX DMAMAP_USART6_RX_2
+
+/*
+ * CAN
+ *
+ * CAN1 is routed to the onboard transceiver.
+ * CAN2 is routed to the expansion connector.
+ */
+#define GPIO_CAN1_RX	GPIO_CAN1_RX_3
+#define GPIO_CAN1_TX	GPIO_CAN1_TX_3
+#define GPIO_CAN2_RX	GPIO_CAN2_RX_1
+#define GPIO_CAN2_TX	GPIO_CAN2_TX_2
  
 /* SPI - There is a MEMS device on SPI1 using these pins: */
 
