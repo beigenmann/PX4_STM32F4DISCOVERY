@@ -46,13 +46,24 @@ MODULES		+= systemcmds/esc_calib
 MODULES		+= systemcmds/mtd
 MODULES		+= systemcmds/dumpfile
 
+
+
 #
-# Library modules
+# Library modules#
+# General system control
+#
+MODULES         += modules/commander
+MODULES	    	+= modules/navigator
+MODULES         += modules/mavlink
+MODULES         += modules/gpio_led
+
+
 #
 MODULES		+= modules/systemlib
 MODULES		+= modules/systemlib/mixer
 MODULES		+= modules/controllib
 MODULES		+= modules/uORB
+MODULES		+= modules/dataman
 
 #
 # Libraries
