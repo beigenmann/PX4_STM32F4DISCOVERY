@@ -21,6 +21,8 @@ MODULES		+= drivers/px4fmu
 MODULES		+= drivers/led
 MODULES		+= drivers/boards/px4-stm32f4discovery
 MODULES		+= drivers/gps
+MODULES		+= modules/sensors
+MODULES		+= drivers/mkblctrl
 
 
 #
