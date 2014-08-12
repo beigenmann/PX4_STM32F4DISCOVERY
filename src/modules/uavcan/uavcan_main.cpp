@@ -199,6 +199,8 @@ void UavcanNode::fill_node_info()
 		hwver.major = 1;
 	} else if (!std::strncmp(HW_ARCH, "PX4FMU_V2", 9)) {
 		hwver.major = 2;
+	} else if (!std::strncmp(HW_ARCH, "PX4_STM32F4DISCOVERY", 20)) {
+		hwver.major = 3;
 	} else {
 		; // All other values of HW_ARCH resolve to zero
 	}
