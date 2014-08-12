@@ -20,6 +20,7 @@ MODULES		+= drivers/stm32/tone_alarm
 MODULES		+= drivers/px4fmu
 MODULES		+= drivers/led
 MODULES		+= drivers/boards/px4-stm32f4discovery
+MODULES		+= drivers/hil
 MODULES		+= drivers/mpu6000
 MODULES		+= drivers/lsm303d
 MODULES		+= drivers/l3gd20
@@ -64,7 +65,19 @@ MODULES         += modules/commander
 MODULES	    	+= modules/navigator
 MODULES         += modules/mavlink
 MODULES         += modules/gpio_led
+#
+# Vehicle Control
+#
+#MODULES		+= modules/segway # XXX Needs GCC 4.7 fix
+MODULES		+= modules/fw_pos_control_l1
+MODULES		+= modules/fw_att_control
+MODULES		+= modules/mc_att_control
+MODULES		+= modules/mc_pos_control
 
+#
+# Logging
+#
+MODULES		+= modules/sdlog2
 
 #
 MODULES		+= modules/systemlib
@@ -83,6 +96,8 @@ MODULES		+= lib/ecl
 MODULES		+= lib/external_lgpl
 MODULES		+= lib/geo
 MODULES		+= lib/conversion
+MODULES		+= lib/geo_lookup
+MODULES		+= lib/launchdetection
 
 #
 # Demo apps
