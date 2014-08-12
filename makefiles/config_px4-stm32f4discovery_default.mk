@@ -7,7 +7,7 @@
 # the ROMFS if it's available
 #
 #ROMFS_ROOT	 = $(PX4_BASE)/ROMFS/px4fmu_common
-ROMFS_ROOT      = $(PX4_BASE)/ROMFS/px4fmu_test
+ROMFS_ROOT      = $(PX4_BASE)/ROMFS/px4fmu_common
 ROMFS_OPTIONAL_FILES = 
 
 #
