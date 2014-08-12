@@ -66,16 +66,16 @@ MODULES         += modules/commander
 MODULES	    	+= modules/navigator
 MODULES         += modules/mavlink
 MODULES         += modules/gpio_led
-#MODULES		+= modules/uavcan
+MODULES		    += modules/uavcan
 
 #
 # Estimation modules (EKF/ SO3 / other filters)
 #
-MODULES		+= modules/attitude_estimator_ekf
-MODULES		+= modules/attitude_estimator_so3
-MODULES		+= modules/ekf_att_pos_estimator
-MODULES		+= modules/position_estimator_inav
-MODULES		+= examples/flow_position_estimator
+#MODULES		+= modules/attitude_estimator_ekf
+#MODULES		+= modules/attitude_estimator_so3
+#MODULES		+= modules/ekf_att_pos_estimator
+#MODULES		+= modules/position_estimator_inav
+#MODULES		+= examples/flow_position_estimator
 #
 # Vehicle Control
 #

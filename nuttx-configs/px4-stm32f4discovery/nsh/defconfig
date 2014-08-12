@@ -451,7 +451,26 @@ CONFIG_WATCHDOG=y
 # CONFIG_INPUT is not set
 # CONFIG_LCD is not set
 # CONFIG_MMCSD is not set
-# CONFIG_MTD is not set
+CONFIG_MTD=y
+
+#
+# MTD Configuration
+#
+CONFIG_MTD_PARTITION=y
+CONFIG_MTD_BYTE_WRITE=y
+
+#
+# MTD Device Drivers
+#
+# CONFIG_RAMMTD is not set
+# CONFIG_MTD_AT24XX is not set
+# CONFIG_MTD_AT45DB is not set
+# CONFIG_MTD_M25P is not set
+# CONFIG_MTD_SMART is not set
+CONFIG_MTD_RAMTRON=y
+# CONFIG_MTD_SST25 is not set
+# CONFIG_MTD_SST39FV is not set
+# CONFIG_MTD_W25 is not set
 CONFIG_PIPES=y
 # CONFIG_PM is not set
 # CONFIG_POWER is not set
