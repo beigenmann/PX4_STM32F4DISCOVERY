@@ -13,6 +13,7 @@ ROMFS_OPTIONAL_FILES =
 #
 # Board support modules
 #
+
 MODULES		+= drivers/device
 MODULES		+= drivers/stm32
 MODULES     += drivers/stm32/adc
