@@ -236,6 +236,10 @@ __EXPORT int nsh_archinitialize(void) {
 	hrt_call_every(&serial_dma_call, ts_to_abstime(&ts), ts_to_abstime(&ts),
 			(hrt_callout) stm32_serial_dma_poll,
 			NULL);
+
+	/* initial LED state */
+	drv_led_start();
+	led_off(LED_AMBER);
 	/* Configure SPI-based devices */
 
 	spi1 = up_spiinitialize(1);
@@ -275,8 +279,6 @@ __EXPORT int nsh_archinitialize(void) {
 	SPI_SELECT(spi2, SPIDEV_FLASH, false);
 
 	message("[boot] Initialized SPI port 2 (RAMTRON FRAM)\n");
-
-
 
 	spi3 = up_spiinitialize(3);
 	if (!spi3) {
