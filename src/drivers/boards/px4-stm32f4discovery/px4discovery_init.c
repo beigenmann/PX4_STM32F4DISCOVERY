@@ -120,7 +120,7 @@ static perf_counter_t g_dma_perf;
 
 static void dma_alloc_init(void) {
 	dma_allocator = gran_initialize(g_dma_heap, sizeof(g_dma_heap), 7, /* 128B granule - must be > alignment (XXX bug?) */
-	6); /* 64B alignment */
+			6); /* 64B alignment */
 	if (dma_allocator == NULL) {
 		message("[boot] DMA allocator setup FAILED");
 	} else {
@@ -239,7 +239,11 @@ __EXPORT int nsh_archinitialize(void) {
 
 	/* initial LED state */
 	drv_led_start();
-	led_off(LED_AMBER);
+	led_on(0);
+	led_on(1);
+	led_on(2);
+	led_on(3);
+
 	/* Configure SPI-based devices */
 
 	spi1 = up_spiinitialize(1);
