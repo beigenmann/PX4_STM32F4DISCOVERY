@@ -68,6 +68,7 @@
 
 #include <drivers/drv_hrt.h>
 #include <drivers/drv_led.h>
+#include <drivers/drv_hc_sr04.h>
 
 #include <systemlib/cpuload.h>
 #include <systemlib/perf_counter.h>
@@ -239,6 +240,7 @@ __EXPORT int nsh_archinitialize(void) {
 
 	/* initial LED state */
 	drv_led_start();
+	drv_hc_sr04_start();
 	led_on(0);
 	led_on(1);
 	led_on(2);

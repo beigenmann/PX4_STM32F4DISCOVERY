@@ -20,6 +20,7 @@ MODULES     += drivers/stm32/adc
 MODULES		+= drivers/stm32/tone_alarm
 MODULES		+= drivers/px4fmu
 MODULES		+= drivers/led
+MODULES		+= drivers/hc_sr04
 MODULES		+= drivers/boards/px4-stm32f4discovery
 MODULES		+= drivers/hil
 MODULES		+= drivers/mpu6000
