@@ -115,4 +115,22 @@ __EXPORT void led_toggle(int led) {
 		else
 			stm32_gpiowrite(GPIO_LED1, true);
 	}
+	if (led == 2) {
+		if (stm32_gpioread(GPIO_LED2))
+			stm32_gpiowrite(GPIO_LED2, false);
+		else
+			stm32_gpiowrite(GPIO_LED2, true);
+	}
+	if (led == 3) {
+		if (stm32_gpioread(GPIO_LED3))
+			stm32_gpiowrite(GPIO_LED3, false);
+		else
+			stm32_gpiowrite(GPIO_LED3, true);
+	}
+	if (led == 4) {
+		if (stm32_gpioread(GPIO_LED4))
+			stm32_gpiowrite(GPIO_LED4, false);
+		else
+			stm32_gpiowrite(GPIO_LED4, true);
+	}
 }
