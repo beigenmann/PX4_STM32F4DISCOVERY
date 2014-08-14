@@ -1,14 +1,12 @@
-
 /**
  * @file hc_sr04.cpp
  *
  * HC-SR04 driver.
  */
-
+#include <string.h>
 #include <nuttx/config.h>
 #include <drivers/device/device.h>
 #include <drivers/drv_hc_sr04.h>
-
 
 __BEGIN_DECLS
 
@@ -20,7 +18,9 @@ public:
 	virtual ~HC_SR04();
 
 	virtual int init();
+	virtual ssize_t read(struct file *filp, char *buffer, size_t buflen);
 	virtual int ioctl(struct file *filp, int cmd, unsigned long arg);
+	void print_info();
 };
 
 HC_SR04::HC_SR04() :
@@ -36,6 +36,15 @@ int HC_SR04::init() {
 	CDev::init();
 	return 0;
 }
+ssize_t HC_SR04::read(struct file *filp, char *buffer, size_t buflen) {
+
+	char str1[]= "To be or not to be\n";
+	ssize_t strl = strlen (str1);
+	ssize_t ret = strl > buflen ? buflen : strl;
+	memcpy(buffer, str1, ret);
+	return ret;
+}
+
 
 int HC_SR04::ioctl(struct file *filp, int cmd, unsigned long arg) {
 	int result = OK;
@@ -46,6 +55,9 @@ int HC_SR04::ioctl(struct file *filp, int cmd, unsigned long arg) {
 		result = CDev::ioctl(filp, cmd, arg);
 	}
 	return result;
+}
+
+void HC_SR04::print_info() {
 }
 
 namespace {
