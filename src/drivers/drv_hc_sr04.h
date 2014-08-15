@@ -52,5 +52,5 @@ __BEGIN_DECLS
  * Initialise the HC SR04 driver.
  */
 __EXPORT void drv_hc_sr04_start(void);
-
+__EXPORT int hc_sr04_main(int argc, char *argv[]);
 __END_DECLS
