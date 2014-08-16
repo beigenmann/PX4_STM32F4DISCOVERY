@@ -68,10 +68,12 @@ ssize_t HC_SR04::read(struct file *filp, char *buffer, size_t buflen) {
 	stm32_gpiowrite(GPIO_TRIG, true);
 
 	clock_gettime(CLOCK_REALTIME, &timestart);
-	//sem_post(&sem_isr);
+
 	int ret = sem_timedwait(&sem_isr, &abstime);
 	if (ret == ETIMEDOUT) {
 		return snprintf(buffer, buflen, "TimeOut");
+	} else {
+		return snprintf(buffer, buflen, "No");
 	}
 	long int time_elapsed = timeend.tv_nsec - timestart.tv_nsec;
 	if ((time_elapsed) > 23285) {
@@ -123,7 +125,18 @@ void drv_hc_sr04_start(void) {
 	}
 }
 
-int hc_sr04_main(int argc, char *argv[])
-{
-	drv_hc_sr04_start();
+int hc_sr04_main(int argc, char *argv[]) {
+	timespec abstime2;
+	abstime2.tv_sec = 0;
+	abstime2.tv_nsec = 1000;
+	sem_t sem_isr2;
+	sem_init(&sem_isr2, 0, 0);
+	int ret = sem_timedwait(&sem_isr2, &abstime2);
+	if (ret != OK) {
+		printf("!ok\n", ret);
+	} else {
+		printf("ok\n");
+	}
+
+//	drv_hc_sr04_start();
 }
