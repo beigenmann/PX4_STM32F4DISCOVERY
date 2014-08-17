@@ -73,11 +73,11 @@ int HC_SR04::init() {
 ssize_t HC_SR04::read(struct file *filp, char *buffer, size_t buflen) {
 	unsigned int timestart;
 
-	stm32_gpiowrite(GPIO_TRIG, true);
-	usleep(200);
 	stm32_gpiowrite(GPIO_TRIG, false);
-	usleep(1000);
+	usleep(2000);
 	stm32_gpiowrite(GPIO_TRIG, true);
+	usleep(10000);
+	stm32_gpiowrite(GPIO_TRIG, false);
 
 	timestart = CPU_CYCLES;
 
