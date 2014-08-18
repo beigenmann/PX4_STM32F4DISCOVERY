@@ -41,8 +41,6 @@ public:
 	void print_info();
 private:
 	unsigned long int timerend;
-//	timespec abstime;
-//	sem_t sem_isr;
 	static int irq_handler(int irq, FAR void *context);
 };
 
@@ -54,9 +52,7 @@ HC_SR04::HC_SR04() :
 	*DWT_CYCCNT = 0;
 	/* Enable CPU cycle counter */
 	DWT_CTRL |= CYCCNTENA;
-//	sem_init(&sem_isr, 0, 0);
-//	abstime.tv_sec = 0;
-//	abstime.tv_nsec = 1000;
+
 }
 
 HC_SR04::~HC_SR04() {
@@ -124,5 +120,13 @@ void drv_hc_sr04_start(void) {
 }
 
 int hc_sr04_main(int argc, char *argv[]) {
+//	timespec abstime;
+//	sem_t sem_isr;
+//	sem_init(&sem_isr, 0, 0);
+//	abstime.tv_sec = 1;
+//	abstime.tv_nsec = 0;
+//
+//	int ret = sem_timedwait(&sem_isr, &abstime);
+//	ret = ret;
 	drv_hc_sr04_start();
 }
