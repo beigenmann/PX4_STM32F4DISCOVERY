@@ -40,27 +40,26 @@ public:
 	void irqeEcho();
 	void print_info();
 private:
-	unsigned int timeend;
-	timespec abstime;
-	sem_t sem_isr;
+	unsigned long int timerend;
+//	timespec abstime;
+//	sem_t sem_isr;
 	static int irq_handler(int irq, FAR void *context);
 };
 
 HC_SR04::HC_SR04() :
-		CDev("hc_sr04", HC_SR04_DEVICE_PATH), sem_isr(SEM_INITIALIZER(0)) {
+		CDev("hc_sr04", HC_SR04_DEVICE_PATH) {
 	init();
 	/* Enable DWT */
 	DEMCR |= DEMCR_TRCENA;
 	*DWT_CYCCNT = 0;
 	/* Enable CPU cycle counter */
 	DWT_CTRL |= CYCCNTENA;
-	sem_init(&sem_isr, 0, 0);
-	abstime.tv_sec = 0;
-	abstime.tv_nsec = 1000;
+//	sem_init(&sem_isr, 0, 0);
+//	abstime.tv_sec = 0;
+//	abstime.tv_nsec = 1000;
 }
 
 HC_SR04::~HC_SR04() {
-	sem_destroy(&sem_isr);
 }
 
 int HC_SR04::init() {
@@ -68,23 +67,23 @@ int HC_SR04::init() {
 	stm32_configgpio(GPIO_TRIG);
 	stm32_configgpio(GPIO_ECHO);
 	stm32_gpiosetevent(GPIO_ECHO, false, true, false, irq_handler);
+	stm32_gpiowrite(GPIO_TRIG, false);
 	return 0;
 }
 ssize_t HC_SR04::read(struct file *filp, char *buffer, size_t buflen) {
-	unsigned int timestart;
+	unsigned long int timestart;
 
-	stm32_gpiowrite(GPIO_TRIG, false);
-	usleep(2000);
 	stm32_gpiowrite(GPIO_TRIG, true);
-	usleep(10000);
+	usleep(100000);
 	stm32_gpiowrite(GPIO_TRIG, false);
 
 	timestart = CPU_CYCLES;
 
-	usleep(500000);
-	long int time_elapsed = timeend - timestart;
-
-	return snprintf(buffer, buflen, "TimeOut %ul %ul %ul\n ", timestart,timeend,time_elapsed);
+	usleep(100000);
+	long int time_elapsed = timerend - timestart;
+	double distance1 = ((time_elapsed) / 8213.184) - 11.5;
+	return snprintf(buffer, buflen, "TimeOut %ul %ul %.2f\n ", timestart,
+			timerend, distance1);
 }
 
 int HC_SR04::ioctl(struct file *filp, int cmd, unsigned long arg) {
@@ -102,7 +101,7 @@ void HC_SR04::print_info() {
 }
 
 void HC_SR04::irqeEcho() {
-	timeend = CPU_CYCLES;
+	timerend = CPU_CYCLES;
 }
 
 namespace {
