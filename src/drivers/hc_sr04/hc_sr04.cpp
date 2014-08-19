@@ -120,13 +120,13 @@ void drv_hc_sr04_start(void) {
 }
 
 int hc_sr04_main(int argc, char *argv[]) {
-//	timespec abstime;
-//	sem_t sem_isr;
-//	sem_init(&sem_isr, 0, 0);
-//	abstime.tv_sec = 1;
-//	abstime.tv_nsec = 0;
-//
-//	int ret = sem_timedwait(&sem_isr, &abstime);
-//	ret = ret;
+	struct timespec abstime;
+	sem_t sem_isr;
+	sem_init(&sem_isr, 0, 0);
+	abstime.tv_nsec = 0;
+	abstime.tv_nsec += 2;
+
+	int ret = sem_timedwait(&sem_isr, &abstime);
+
 	drv_hc_sr04_start();
 }
