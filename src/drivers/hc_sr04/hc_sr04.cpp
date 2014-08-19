@@ -40,13 +40,16 @@ public:
 	void irqeEcho();
 	void print_info();
 private:
-	unsigned long int timerend;
+
+	sem_t sem_isr;
+	unsigned long long int timerend;
 	static int irq_handler(int irq, FAR void *context);
 };
 
 HC_SR04::HC_SR04() :
 		CDev("hc_sr04", HC_SR04_DEVICE_PATH) {
 	init();
+	sem_init(&sem_isr, 0, 0);
 	/* Enable DWT */
 	DEMCR |= DEMCR_TRCENA;
 	*DWT_CYCCNT = 0;
@@ -67,19 +70,29 @@ int HC_SR04::init() {
 	return 0;
 }
 ssize_t HC_SR04::read(struct file *filp, char *buffer, size_t buflen) {
-	unsigned long int timestart;
-
+	struct timespec abstime;
+	unsigned long long int timestart;
+	sem_init(&sem_isr, 0, 0);
+	usleep(100000);
 	stm32_gpiowrite(GPIO_TRIG, true);
 	usleep(100000);
+	clock_gettime(CLOCK_REALTIME, &abstime);
+	abstime.tv_nsec += 2000000;
 	stm32_gpiowrite(GPIO_TRIG, false);
 
 	timestart = CPU_CYCLES;
 
-	usleep(100000);
-	long int time_elapsed = timerend - timestart;
-	double distance1 = ((time_elapsed) / 8213.184) - 11.5;
-	return snprintf(buffer, buflen, "TimeOut %ul %ul %.2f\n ", timestart,
-			timerend, distance1);
+	int ret = sem_timedwait(&sem_isr, &abstime);
+	if (ret == ETIMEDOUT) {
+		return snprintf(buffer, buflen, "TimeOut\n");
+	}
+	if (ret == OK) {
+		long long int time_elapsed = timerend - timestart;
+		double distance1 = ((time_elapsed) / 8213.184) - 11.5;
+		return snprintf(buffer, buflen, "ALT %llu %llu %.2f\n", timestart,
+				timerend, distance1);
+	}
+	return snprintf(buffer, buflen, "Error %ui\n", ret);
 }
 
 int HC_SR04::ioctl(struct file *filp, int cmd, unsigned long arg) {
@@ -98,6 +111,7 @@ void HC_SR04::print_info() {
 
 void HC_SR04::irqeEcho() {
 	timerend = CPU_CYCLES;
+	sem_post(&sem_isr);
 }
 
 namespace {
@@ -109,6 +123,7 @@ int HC_SR04::irq_handler(int irq, FAR void *context) {
 	if (gHC_SR04 != nullptr) {
 		gHC_SR04->irqeEcho();
 	}
+	return 0;
 }
 
 void drv_hc_sr04_start(void) {
@@ -120,13 +135,5 @@ void drv_hc_sr04_start(void) {
 }
 
 int hc_sr04_main(int argc, char *argv[]) {
-	struct timespec abstime;
-	sem_t sem_isr;
-	sem_init(&sem_isr, 0, 0);
-	abstime.tv_nsec = 0;
-	abstime.tv_nsec += 2;
-
-	int ret = sem_timedwait(&sem_isr, &abstime);
-
 	drv_hc_sr04_start();
 }
