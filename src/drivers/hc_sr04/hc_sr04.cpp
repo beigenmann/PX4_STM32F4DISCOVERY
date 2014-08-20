@@ -28,7 +28,9 @@
 __BEGIN_DECLS
 
 __END_DECLS
-
+static inline uint32_t getticks() {
+	return CPU_CYCLES;
+}
 class HC_SR04: device::CDev {
 public:
 	HC_SR04();
@@ -47,8 +49,13 @@ private:
 };
 
 HC_SR04::HC_SR04() :
-		CDev("hc_sr04", HC_SR04_DEVICE_PATH) {
+		CDev("hc_sr04", HC_SR04_DEVICE_PATH), sem_isr(SEM_INITIALIZER(0)) {
 	init();
+	/* Enable DWT */
+	DEMCR |= DEMCR_TRCENA;
+	*DWT_CYCCNT = 0;
+	/* Enable CPU cycle counter */
+	DWT_CTRL |= CYCCNTENA;
 	sem_init(&sem_isr, 0, 0);
 }
 
@@ -60,35 +67,42 @@ int HC_SR04::init() {
 	stm32_configgpio(GPIO_TRIG);
 	stm32_configgpio(GPIO_ECHO);
 	stm32_gpiosetevent(GPIO_ECHO, false, true, false, irq_handler);
-	stm32_gpiowrite(GPIO_TRIG, false);
+	stm32_gpiowrite(GPIO_TRIG, true);
 	return 0;
 }
 ssize_t HC_SR04::read(struct file *filp, char *buffer, size_t buflen) {
 	struct timespec abstime;
-	unsigned int  timestart;
-	sem_init(&sem_isr, 0, 0);
-	stm32_gpiowrite(GPIO_TRIG, true);
-	usleep(10000);
-	stm32_gpiowrite(GPIO_TRIG, false);
+	unsigned int timestart;
+	for (;;) {
+		stm32_gpiowrite(GPIO_TRIG, true);
+		usleep(50000);
+		stm32_gpiowrite(GPIO_TRIG, false);
 
-	clock_gettime(CLOCK_REALTIME, &abstime);
-	abstime.tv_nsec += 2000000;
-	//clock_gettime(CLOCK_REALTIME, &timestart);
-	timestart =CPU_CYCLES;
+		clock_gettime(CLOCK_REALTIME, &abstime);
+		abstime.tv_nsec += 10000000;
+		//clock_gettime(CLOCK_REALTIME, &timestart);
+		timestart = getticks();
+		//sem_init(&sem_isr, 0, 0);
+		int ret = sem_timedwait(&sem_isr, &abstime);
 
-
-	int ret = sem_timedwait(&sem_isr, &abstime);
-	if (ret == ETIMEDOUT) {
-		return snprintf(buffer, buflen, "TimeOut\n");
-	}
-	if (ret == OK) {
-		int timediff = timerend -timestart;
-		if(timediff>0){
-			timediff += 2^31;
+		if (ret == ETIMEDOUT) {
+			return snprintf(buffer, buflen, "TimeOut\n");
 		}
-		return snprintf(buffer, buflen, "ALT %i \n", timediff) ;
+		if (ret == OK) {
+			long long timediff = timerend - timestart;
+
+			if (timerend < timestart) {
+				timediff += timerend + (INT_MAX - timestart);
+			}
+			int pv = (int) timediff / 1000;
+			if (pv > 12000) {
+				usleep(100000);
+				continue;
+			}
+			return snprintf(buffer, buflen, "ALT %u\n", pv);
+		}
 	}
-	return snprintf(buffer, buflen, "Error %ui\n", ret);
+//return snprintf(buffer, buflen, "Error %u\n", ret);
 }
 
 int HC_SR04::ioctl(struct file *filp, int cmd, unsigned long arg) {
@@ -106,8 +120,12 @@ void HC_SR04::print_info() {
 }
 
 void HC_SR04::irqeEcho() {
-	timerend = CPU_CYCLES;
-	sem_post(&sem_isr);
+	int svalue;
+	timerend = getticks();
+	sem_getvalue(&sem_isr, &svalue);
+	if (svalue < 0) {
+		sem_post(&sem_isr);
+	}
 }
 
 namespace {
