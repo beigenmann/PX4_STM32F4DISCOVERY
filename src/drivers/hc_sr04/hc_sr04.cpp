@@ -42,7 +42,7 @@ public:
 private:
 
 	sem_t sem_isr;
-	unsigned long long int timerend;
+	unsigned int timerend;
 	static int irq_handler(int irq, FAR void *context);
 };
 
@@ -50,12 +50,6 @@ HC_SR04::HC_SR04() :
 		CDev("hc_sr04", HC_SR04_DEVICE_PATH) {
 	init();
 	sem_init(&sem_isr, 0, 0);
-	/* Enable DWT */
-	DEMCR |= DEMCR_TRCENA;
-	*DWT_CYCCNT = 0;
-	/* Enable CPU cycle counter */
-	DWT_CTRL |= CYCCNTENA;
-
 }
 
 HC_SR04::~HC_SR04() {
@@ -71,26 +65,28 @@ int HC_SR04::init() {
 }
 ssize_t HC_SR04::read(struct file *filp, char *buffer, size_t buflen) {
 	struct timespec abstime;
-	unsigned long long int timestart;
+	unsigned int  timestart;
 	sem_init(&sem_isr, 0, 0);
-	usleep(100000);
 	stm32_gpiowrite(GPIO_TRIG, true);
-	usleep(100000);
-	clock_gettime(CLOCK_REALTIME, &abstime);
-	abstime.tv_nsec += 2000000;
+	usleep(10000);
 	stm32_gpiowrite(GPIO_TRIG, false);
 
-	timestart = CPU_CYCLES;
+	clock_gettime(CLOCK_REALTIME, &abstime);
+	abstime.tv_nsec += 2000000;
+	//clock_gettime(CLOCK_REALTIME, &timestart);
+	timestart =CPU_CYCLES;
+
 
 	int ret = sem_timedwait(&sem_isr, &abstime);
 	if (ret == ETIMEDOUT) {
 		return snprintf(buffer, buflen, "TimeOut\n");
 	}
 	if (ret == OK) {
-		long long int time_elapsed = timerend - timestart;
-		double distance1 = ((time_elapsed) / 8213.184) - 11.5;
-		return snprintf(buffer, buflen, "ALT %llu %llu %.2f\n", timestart,
-				timerend, distance1);
+		int timediff = timerend -timestart;
+		if(timediff>0){
+			timediff += 2^31;
+		}
+		return snprintf(buffer, buflen, "ALT %i \n", timediff) ;
 	}
 	return snprintf(buffer, buflen, "Error %ui\n", ret);
 }
