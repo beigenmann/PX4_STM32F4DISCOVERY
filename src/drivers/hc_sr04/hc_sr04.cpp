@@ -133,10 +133,12 @@ HC_SR04 *gHC_SR04;
 }
 
 int HC_SR04::irq_handler(int irq, FAR void *context) {
+	irqstate_t flags = irqsave();
 
 	if (gHC_SR04 != nullptr) {
 		gHC_SR04->irqeEcho();
 	}
+	irqrestore(flags);
 	return 0;
 }
 
