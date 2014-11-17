@@ -108,7 +108,7 @@ typedef enum {
 	NAVIGATION_STATE_AUTO_LANDGPSFAIL,	/**< Auto land on gps failure (e.g. open loop loiter down) */
 	NAVIGATION_STATE_ACRO,			/**< Acro mode */
 	NAVIGATION_STATE_LAND,			/**< Land mode */
-	NAVIGATION_STATE_DESCEND,			/**< Descend mode (no position control) */
+	NAVIGATION_STATE_DESCEND,		/**< Descend mode (no position control) */
 	NAVIGATION_STATE_TERMINATION,		/**< Termination mode */
 	NAVIGATION_STATE_OFFBOARD,
 	NAVIGATION_STATE_MAX,
@@ -218,6 +218,8 @@ struct vehicle_status_s {
 	bool offboard_control_signal_lost;
 	bool offboard_control_signal_weak;
 	uint64_t offboard_control_signal_lost_interval;	/**< interval in microseconds without an offboard control message */
+	bool offboard_control_set_by_command; /**< true if the offboard mode was set by a mavlink command
+						    and should not be overridden by RC */
 
 	/* see SYS_STATUS mavlink message for the following */
 	uint32_t onboard_control_sensors_present;
