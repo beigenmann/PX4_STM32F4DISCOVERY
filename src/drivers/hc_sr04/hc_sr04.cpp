@@ -152,4 +152,5 @@ void drv_hc_sr04_start(void) {
 
 int hc_sr04_main(int argc, char *argv[]) {
 	drv_hc_sr04_start();
+	return 0;
 }
