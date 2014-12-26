@@ -245,5 +245,9 @@ __BEGIN_DECLS
 extern void stm32_spiinitialize(void);
 
 #endif /* __ASSEMBLY__ */
+#ifdef CONFIG_NSH_LIBRARY
+int nsh_archinitialize(void);
+#endif
+
 
 __END_DECLS
