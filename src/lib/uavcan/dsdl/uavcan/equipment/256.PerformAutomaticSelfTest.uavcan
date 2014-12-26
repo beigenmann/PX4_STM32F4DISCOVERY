@@ -1,0 +1,15 @@
+#
+# Fast automatic self test request.
+# Use the service uavcan.protocol.GetDataTypeInfo to detect whether this service is supported.
+# If at least one node fails, the mission should be aborted.
+#
+
+---
+
+# Amount of extra time the node needs to finish the procedure.
+uint16 delay_msec
+
+# Status:
+#  true  - the requested procedure is being executed or was executed
+#  false - the requested procedure can't be executed right now
+bool ok
