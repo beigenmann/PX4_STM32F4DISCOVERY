@@ -243,7 +243,7 @@ __BEGIN_DECLS
  ****************************************************************************************************/
 
 extern void stm32_spiinitialize(void);
-
+extern void stm32_usbinitialize(void);
 #endif /* __ASSEMBLY__ */
 #ifdef CONFIG_NSH_LIBRARY
 int nsh_archinitialize(void);
