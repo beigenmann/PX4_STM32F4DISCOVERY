@@ -75,7 +75,12 @@
 /****************************************************************************
  * Pre-Processor Definitions
  ****************************************************************************/
+__BEGIN_DECLS
+extern void led_init(void);
 extern void led_on(int led);
+extern void led_off(int led);
+__END_DECLS
+
 
 /* Configuration ************************************************************/
 
