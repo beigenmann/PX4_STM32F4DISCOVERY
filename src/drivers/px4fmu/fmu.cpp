@@ -108,6 +108,10 @@ public:
 	int		set_pwm_alt_channels(uint32_t channels);
 
 private:
+#if defined(CONFIG_ARCH_BOARD_PX4_STM32F4DISCOVERY)
+        static const unsigned _max_actuators = 4;
+#endif
+
 #if defined(CONFIG_ARCH_BOARD_PX4FMU_V1)
 	static const unsigned _max_actuators = 4;
 #endif
@@ -185,6 +189,17 @@ private:
 };
 
 const PX4FMU::GPIOConfig PX4FMU::_gpio_tab[] = {
+#if defined(CONFIG_ARCH_BOARD_PX4_STM32F4DISCOVERY)
+        {GPIO_GPIO0_INPUT, GPIO_GPIO0_OUTPUT, 0},
+        {GPIO_GPIO1_INPUT, GPIO_GPIO1_OUTPUT, 0},
+        {GPIO_GPIO2_INPUT, GPIO_GPIO2_OUTPUT, GPIO_USART2_CTS_1},
+        {GPIO_GPIO3_INPUT, GPIO_GPIO3_OUTPUT, GPIO_USART2_RTS_1},
+        {GPIO_GPIO4_INPUT, GPIO_GPIO4_OUTPUT, GPIO_USART2_TX_1},
+        {GPIO_GPIO5_INPUT, GPIO_GPIO5_OUTPUT, GPIO_USART2_RX_1},
+        //{GPIO_GPIO6_INPUT, GPIO_GPIO6_OUTPUT, GPIO_CAN2_TX_2},
+        //{GPIO_GPIO7_INPUT, GPIO_GPIO7_OUTPUT, GPIO_CAN2_RX_2},
+#endif
+
 #if defined(CONFIG_ARCH_BOARD_PX4FMU_V1)
 	{GPIO_GPIO0_INPUT, GPIO_GPIO0_OUTPUT, 0},
 	{GPIO_GPIO1_INPUT, GPIO_GPIO1_OUTPUT, 0},
@@ -1378,17 +1393,23 @@ PX4FMU::gpio_reset(void)
 		}
 	}
 
-#if defined(CONFIG_ARCH_BOARD_PX4FMU_V1)
+#if defined(CONFIG_ARCH_BOARD_PX4_STM32F4DISCOVERY)
 	/* if we have a GPIO direction control, set it to zero (input) */
-	stm32_gpiowrite(GPIO_GPIO_DIR, 0);
-	stm32_configgpio(GPIO_GPIO_DIR);
+	//stm32_gpiowrite(GPIO_GPIO_DIR, 0);
+	//stm32_configgpio(GPIO_GPIO_DIR);
 #endif
+#if defined(CONFIG_ARCH_BOARD_PX4FMU_V1)
+        /* if we have a GPIO direction control, set it to zero (input) */
+        stm32_gpiowrite(GPIO_GPIO_DIR, 0);
+        stm32_configgpio(GPIO_GPIO_DIR);
+#endif
+
 }
 
 void
 PX4FMU::gpio_set_function(uint32_t gpios, int function)
 {
-#if defined(CONFIG_ARCH_BOARD_PX4FMU_V1)
+#if defined(CONFIG_ARCH_BOARD_PX4_STM32F4DISCOVERY)
 
 	/*
 	 * GPIOs 0 and 1 must have the same direction as they are buffered
@@ -1398,11 +1419,29 @@ PX4FMU::gpio_set_function(uint32_t gpios, int function)
 		gpios |= 3;
 
 		/* flip the buffer to output mode if required */
-		if (GPIO_SET_OUTPUT == function)
-			stm32_gpiowrite(GPIO_GPIO_DIR, 1);
+		//if (GPIO_SET_OUTPUT == function)
+
+			//stm32_gpiowrite(GPIO_GPIO_DIR, 1);
 	}
 
 #endif
+
+#if defined(CONFIG_ARCH_BOARD_PX4FMU_V1)
+
+        /*
+         * GPIOs 0 and 1 must have the same direction as they are buffered
+         * by a shared 2-port driver.  Any attempt to set either sets both.
+         */
+        if (gpios & 3) {
+                gpios |= 3;
+
+                /* flip the buffer to output mode if required */
+                if (GPIO_SET_OUTPUT == function)
+                        stm32_gpiowrite(GPIO_GPIO_DIR, 1);
+        }
+
+#endif
+
 
 	/* configure selected GPIOs as required */
 	for (unsigned i = 0; i < _ngpio; i++) {
