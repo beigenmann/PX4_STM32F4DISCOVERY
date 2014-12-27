@@ -89,9 +89,6 @@ int gpio_led_main(int argc, char *argv[])
 		     "\t\tr2\tPX4IO RELAY2"
 		    );
 #endif
-<<<<<<< HEAD
-#if defined(CONFIG_ARCH_BOARD_PX4FMU_V2) || defined (CONFIG_ARCH_BOARD_PX4_STM32F4DISCOVERY)
-=======
 #ifdef CONFIG_ARCH_BOARD_PX4_STM32F4DISCOVERY 
                 errx(1, "usage: gpio_led {start|stop} [-p <1|2|a1|a2|r1|r2>]\n"
                      "\t-p\tUse pin:\n"
@@ -105,7 +102,6 @@ int gpio_led_main(int argc, char *argv[])
 #endif
 
 #ifdef CONFIG_ARCH_BOARD_PX4FMU_V2
->>>>>>> 27374db776309d3eba61d55708b1d2b3cfe5335f
 		errx(1, "usage: gpio_led {start|stop} [-p <n>]\n"
 		     "\t-p <n>\tUse specified AUX OUT pin number (default: 1)"
 		    );
@@ -127,15 +123,11 @@ int gpio_led_main(int argc, char *argv[])
 #ifdef CONFIG_ARCH_BOARD_PX4FMU_V1
 			char *pin_name = "PX4FMU GPIO_EXT1";
 #endif
-<<<<<<< HEAD
-#if defined(CONFIG_ARCH_BOARD_PX4FMU_V2) || defined (CONFIG_ARCH_BOARD_PX4_STM32F4DISCOVERY)
-=======
 #ifdef CONFIG_ARCH_BOARD_PX4_STM32F4DISCOVERY
                         char *pin_name = "PX4FMU GPIO_EXT1";
 #endif
 
 #ifdef CONFIG_ARCH_BOARD_PX4FMU_V2
->>>>>>> 27374db776309d3eba61d55708b1d2b3cfe5335f
 			char pin_name[] = "AUX OUT 1";
 #endif
 
@@ -178,9 +170,6 @@ int gpio_led_main(int argc, char *argv[])
 					}
 
 #endif
-<<<<<<< HEAD
-#if defined(CONFIG_ARCH_BOARD_PX4FMU_V2) || defined (CONFIG_ARCH_BOARD_PX4_STM32F4DISCOVERY)
-=======
 
 #ifdef CONFIG_ARCH_BOARD_PX4_STM32F4DISCOVERY
 
@@ -201,7 +190,6 @@ int gpio_led_main(int argc, char *argv[])
 #endif
 
 #ifdef CONFIG_ARCH_BOARD_PX4FMU_V2
->>>>>>> 27374db776309d3eba61d55708b1d2b3cfe5335f
 					unsigned int n = strtoul(argv[3], NULL, 10);
 
 					if (n >= 1 && n <= 6) {

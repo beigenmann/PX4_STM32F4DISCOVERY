@@ -423,11 +423,6 @@ adc_main(int argc, char *argv[])
 		/* XXX this hardcodes the default channel set for AeroCore - should be configurable */
 		g_adc = new ADC((1 << 10) | (1 << 11) | (1 << 12) | (1 << 13));
 #endif
-#ifdef CONFIG_ARCH_BOARD_PX4_STM32F4DISCOVERY
-		/* XXX this hardcodes the default channel set for PX4_STM32F4DISCOVERY - should be configurable */
-				g_adc = new ADC((1 << 2) | (1 << 3) | (1 << 4) |
-					(1 << 10) | (1 << 11) | (1 << 12) | (1 << 13) | (1 << 14) | (1 << 15));
-#endif
 
 		if (g_adc == nullptr)
 			errx(1, "couldn't allocate the ADC driver");
