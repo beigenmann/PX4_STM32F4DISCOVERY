@@ -16,7 +16,7 @@
 
 ### Users ###
 
-Please refer to the [user documentation](https://pixhawk.org/users/start) for flying drones with PX4.
+Please refer to the [user documentation](https://pixhawk.org/users/start) for flying drones with the PX4 flight stack.
 
 ### Developers ###
 
@@ -30,8 +30,8 @@ Testing guide:
 http://px4.io/dev/unit_tests
 
 This repository contains code supporting these boards:
-  * PX4FMUv1.x
-  * PX4FMUv2.x
+  * FMUv1.x
+  * FMUv2.x
   * AeroCore (v1 and v2)
 
 ## NuttShell (NSH) ##
