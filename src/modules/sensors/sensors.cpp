@@ -121,6 +121,12 @@
 #define ADC_AIRSPEED_VOLTAGE_CHANNEL	11
 #endif
 
+#ifdef CONFIG_ARCH_BOARD_PX4_STM32F4DISCOVERY
+#define ADC_BATTERY_VOLTAGE_CHANNEL     10
+#define ADC_BATTERY_CURRENT_CHANNEL     -1
+#define ADC_AIRSPEED_VOLTAGE_CHANNEL    11
+#endif
+
 #ifdef CONFIG_ARCH_BOARD_PX4FMU_V2
 #define ADC_BATTERY_VOLTAGE_CHANNEL	2
 #define ADC_BATTERY_CURRENT_CHANNEL	3
@@ -944,13 +950,20 @@ Sensors::accel_init()
 
 		// XXX do the check more elegantly
 
-#ifdef CONFIG_ARCH_BOARD_PX4FMU_V1
+#ifdef CONFIG_ARCH_BOARD_PX4FMU_V1 
 
 		/* set the accel internal sampling rate up to at leat 1000Hz */
 		ioctl(fd, ACCELIOCSSAMPLERATE, 1000);
 
 		/* set the driver to poll at 1000Hz */
 		ioctl(fd, SENSORIOCSPOLLRATE, 1000);
+#elif CONFIG_ARCH_BOARD_PX4_STM32F4DISCOVERY
+
+                /* set the accel internal sampling rate up to at leat 1000Hz */
+                ioctl(fd, ACCELIOCSSAMPLERATE, 1000);
+
+                /* set the driver to poll at 1000Hz */
+                ioctl(fd, SENSORIOCSPOLLRATE, 1000);
 
 #elif CONFIG_ARCH_BOARD_PX4FMU_V2 || CONFIG_ARCH_BOARD_AEROCORE
 

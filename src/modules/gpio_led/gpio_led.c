@@ -89,6 +89,18 @@ int gpio_led_main(int argc, char *argv[])
 		     "\t\tr2\tPX4IO RELAY2"
 		    );
 #endif
+#ifdef CONFIG_ARCH_BOARD_PX4_STM32F4DISCOVERY 
+                errx(1, "usage: gpio_led {start|stop} [-p <1|2|a1|a2|r1|r2>]\n"
+                     "\t-p\tUse pin:\n"
+                     "\t\t1\tPX4FMU GPIO_EXT1 (default)\n"
+                     "\t\t2\tPX4FMU GPIO_EXT2\n"
+                     "\t\ta1\tPX4IO ACC1\n"
+                     "\t\ta2\tPX4IO ACC2\n"
+                     "\t\tr1\tPX4IO RELAY1\n"
+                     "\t\tr2\tPX4IO RELAY2"
+                    );
+#endif
+
 #ifdef CONFIG_ARCH_BOARD_PX4FMU_V2
 		errx(1, "usage: gpio_led {start|stop} [-p <n>]\n"
 		     "\t-p <n>\tUse specified AUX OUT pin number (default: 1)"
@@ -111,6 +123,10 @@ int gpio_led_main(int argc, char *argv[])
 #ifdef CONFIG_ARCH_BOARD_PX4FMU_V1
 			char *pin_name = "PX4FMU GPIO_EXT1";
 #endif
+#ifdef CONFIG_ARCH_BOARD_PX4_STM32F4DISCOVERY
+                        char *pin_name = "PX4FMU GPIO_EXT1";
+#endif
+
 #ifdef CONFIG_ARCH_BOARD_PX4FMU_V2
 			char pin_name[] = "AUX OUT 1";
 #endif
@@ -154,6 +170,25 @@ int gpio_led_main(int argc, char *argv[])
 					}
 
 #endif
+
+#ifdef CONFIG_ARCH_BOARD_PX4_STM32F4DISCOVERY
+
+                                        if (!strcmp(argv[3], "1")) {
+                                                use_io = false;
+                                                pin = GPIO_EXT_1;
+                                                pin_name = "PX4FMU GPIO_EXT1";
+
+                                        } else if (!strcmp(argv[3], "2")) {
+                                                use_io = false;
+                                                pin = GPIO_EXT_2;
+                                                pin_name = "PX4FMU GPIO_EXT2";
+
+                                        } else {
+                                                errx(1, "unsupported pin: %s", argv[3]);
+                                        }
+
+#endif
+
 #ifdef CONFIG_ARCH_BOARD_PX4FMU_V2
 					unsigned int n = strtoul(argv[3], NULL, 10);
 
