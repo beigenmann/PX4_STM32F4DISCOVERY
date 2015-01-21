@@ -1340,7 +1340,7 @@ int commander_thread_main(int argc, char *argv[])
 			status.vtol_fw_permanent_stab = vtol_status.fw_permanent_stab;
 
 			/* Make sure that this is only adjusted if vehicle realy is of type vtol*/
-			if (status.system_type == VEHICLE_TYPE_VTOL_DUOROTOR || VEHICLE_TYPE_VTOL_QUADROTOR) {
+			if ((status.system_type == VEHICLE_TYPE_VTOL_DUOROTOR) || (status.system_type == VEHICLE_TYPE_VTOL_QUADROTOR)) {
 				status.is_rotary_wing = vtol_status.vtol_in_rw_mode;
 			}
 		}
@@ -1457,7 +1457,7 @@ int commander_thread_main(int argc, char *argv[])
 		if (updated) {
 			orb_copy(ORB_ID(subsystem_info), subsys_sub, &info);
 
-			warnx("subsystem changed: %d\n", (int)info.subsystem_type);
+			//warnx("subsystem changed: %d\n", (int)info.subsystem_type);
 
 			/* mark / unmark as present */
 			if (info.present) {
