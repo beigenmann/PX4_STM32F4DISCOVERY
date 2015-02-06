@@ -989,6 +989,7 @@ Sensors::accel_init()
 		ioctl(fd, SENSORIOCSPOLLRATE, SENSOR_POLLRATE_DEFAULT);
 
 		close(fd);
+#endif
 	}
 
 	return OK;
