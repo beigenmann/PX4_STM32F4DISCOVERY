@@ -1,0 +1,4745 @@
+diff --git a/Images/px4-stm32f4discovery.prototype b/Images/px4-stm32f4discovery.prototype
+new file mode 100644
+index 0000000..987a756
+--- /dev/null
++++ b/Images/px4-stm32f4discovery.prototype
+@@ -0,0 +1,12 @@
++{
++    "board_id": 99, 
++    "magic": "PX4FWv1", 
++    "description": "Firmware for the STM32F4Discovery board", 
++    "image": "", 
++    "build_time": 0, 
++    "summary": "PX4FWv1",
++    "version": "0.1",
++    "image_size": 0,
++    "git_identity": "",
++    "board_revision": 0
++}
+diff --git a/makefiles/board_px4-stm32f4discovery.mk b/makefiles/board_px4-stm32f4discovery.mk
+new file mode 100644
+index 0000000..fbf3feb
+--- /dev/null
++++ b/makefiles/board_px4-stm32f4discovery.mk
+@@ -0,0 +1,11 @@
++#
++# Board-specific definitions for the PX4FMUv2
++#
++
++#
++# Configure the toolchain
++#
++CONFIG_ARCH			 = CORTEXM4F
++CONFIG_BOARD			 = PX4_STM32F4DISCOVERY
++
++include $(PX4_MK_DIR)/toolchain_gnu-arm-eabi.mk
+diff --git a/makefiles/config_px4-stm32f4discovery_default.mk b/makefiles/config_px4-stm32f4discovery_default.mk
+new file mode 100644
+index 0000000..3d8cdfa
+--- /dev/null
++++ b/makefiles/config_px4-stm32f4discovery_default.mk
+@@ -0,0 +1,152 @@
++#
++# Makefile for the px4fmu_default configuration
++#
++
++#
++# Use the configuration's ROMFS, copy the px4iov2 firmware into
++# the ROMFS if it's available
++#
++#ROMFS_ROOT	 = $(PX4_BASE)/ROMFS/px4fmu_common
++ROMFS_ROOT      = $(PX4_BASE)/ROMFS/px4fmu_common
++ROMFS_OPTIONAL_FILES = 
++
++#
++# Board support modules
++#
++
++MODULES		+= drivers/device
++MODULES		+= drivers/stm32
++MODULES     += drivers/stm32/adc
++MODULES		+= drivers/stm32/tone_alarm
++MODULES		+= drivers/px4fmu
++MODULES		+= drivers/led
++MODULES		+= drivers/hc_sr04
++MODULES		+= drivers/boards/px4-stm32f4discovery
++MODULES		+= drivers/hil
++MODULES		+= drivers/mpu6000
++MODULES		+= drivers/lsm303d
++MODULES		+= drivers/l3gd20
++MODULES		+= drivers/hmc5883
++MODULES		+= drivers/ms5611
++MODULES		+= drivers/mb12xx
++MODULES		+= drivers/sf0x
++MODULES		+= drivers/ll40ls
++MODULES		+= drivers/gps
++MODULES		+= modules/sensors
++MODULES		+= drivers/mkblctrl
++
++
++#
++# System commands
++#
++
++
++MODULES		+= systemcmds/bl_update
++MODULES		+= systemcmds/boardinfo
++MODULES		+= systemcmds/mixer
++MODULES		+= systemcmds/param
++MODULES		+= systemcmds/perf
++MODULES		+= systemcmds/preflight_check
++MODULES		+= systemcmds/pwm
++MODULES		+= systemcmds/esc_calib
++MODULES		+= systemcmds/reboot
++MODULES		+= systemcmds/top
++MODULES		+= systemcmds/tests
++MODULES		+= systemcmds/config
++MODULES		+= systemcmds/nshterm
++MODULES		+= systemcmds/mtd
++MODULES		+= systemcmds/dumpfile
++MODULES		+= systemcmds/ver
++
++
++#
++# Library modules#
++# General system control
++#
++MODULES         += modules/commander
++MODULES	    	+= modules/navigator
++MODULES         += modules/mavlink
++MODULES         += modules/gpio_led
++#MODULES		    += modules/uavcan
++
++#
++# Estimation modules (EKF/ SO3 / other filters)
++#
++#MODULES		+= modules/attitude_estimator_ekf
++#MODULES		+= modules/attitude_estimator_so3
++#MODULES		+= modules/ekf_att_pos_estimator
++#MODULES		+= modules/position_estimator_inav
++#MODULES		+= examples/flow_position_estimator
++#
++# Vehicle Control
++#
++#MODULES		+= modules/segway # XXX Needs GCC 4.7 fix
++MODULES		+= modules/fw_pos_control_l1
++MODULES		+= modules/fw_att_control
++MODULES		+= modules/mc_att_control
++MODULES		+= modules/mc_pos_control
++
++#
++# Logging
++#
++MODULES		+= modules/sdlog2
++
++#
++MODULES		+= modules/systemlib
++MODULES		+= modules/systemlib/mixer
++MODULES		+= modules/controllib
++MODULES		+= modules/uORB
++MODULES		+= modules/dataman
++
++#
++# Libraries
++#
++LIBRARIES	+= lib/mathlib/CMSIS
++MODULES		+= lib/mathlib
++MODULES		+= lib/mathlib/math/filter
++MODULES		+= lib/ecl
++MODULES		+= lib/external_lgpl
++MODULES		+= lib/geo
++MODULES		+= lib/conversion
++MODULES		+= lib/geo_lookup
++MODULES		+= lib/launchdetection
++
++#
++# Demo apps
++#
++#MODULES		+= examples/math_demo
++# Tutorial code from
++# https://pixhawk.ethz.ch/px4/dev/hello_sky
++MODULES		+= examples/px4_simple_app
++
++# Tutorial code from
++# https://pixhawk.ethz.ch/px4/dev/daemon
++#MODULES		+= examples/px4_daemon_app
++
++# Tutorial code from
++# https://pixhawk.ethz.ch/px4/dev/debug_values
++#MODULES		+= examples/px4_mavlink_debug
++
++# Tutorial code from
++# https://pixhawk.ethz.ch/px4/dev/example_fixedwing_control
++#MODULES			+= examples/fixedwing_control
++
++# Hardware test
++#MODULES			+= examples/hwtest
++
++#
++# Transitional support - add commands from the NuttX export archive.
++#
++# In general, these should move to modules over time.
++#
++# Each entry here is <command>.<priority>.<stacksize>.<entrypoint> but we use a helper macro
++# to make the table a bit more readable.
++#
++define _B
++	$(strip $1).$(or $(strip $2),SCHED_PRIORITY_DEFAULT).$(or $(strip $3),CONFIG_PTHREAD_STACK_DEFAULT).$(strip $4)
++endef
++
++#                  command                 priority                   stack  entrypoint
++BUILTIN_COMMANDS := \
++	$(call _B, sercon,                 ,                          2048,  sercon_main                ) \
++	$(call _B, serdis,                 ,                          2048,  serdis_main                )
+diff --git a/makefiles/upload.mk b/makefiles/upload.mk
+index 29b4156..f1243c8 100644
+--- a/makefiles/upload.mk
++++ b/makefiles/upload.mk
+@@ -30,6 +30,9 @@ upload-serial-px4fmu-v1:	$(BUNDLE) $(UPLOADER)
+ upload-serial-px4fmu-v2:	$(BUNDLE) $(UPLOADER)
+ 	$(Q) $(PYTHON) -u $(UPLOADER) --port $(SERIAL_PORTS) $(BUNDLE)
+ 
++upload-serial-px4-stm32f4discovery:     $(BUNDLE) $(UPLOADER)
++	$(Q) $(PYTHON) -u $(UPLOADER) --port $(SERIAL_PORTS) $(BUNDLE)
++
+ upload-serial-aerocore:
+ 	openocd -f $(PX4_BASE)/makefiles/gumstix-aerocore.cfg -c 'init; reset halt; flash write_image erase $(PX4_BASE)/../Bootloader/px4aerocore_bl.bin 0x08000000; flash write_image erase $(PX4_BASE)/Build/aerocore_default.build/firmware.bin 0x08004000; reset run; exit'
+ 
+diff --git a/mc.sh b/mc.sh
+new file mode 100755
+index 0000000..d8639e1
+--- /dev/null
++++ b/mc.sh
+@@ -0,0 +1,2 @@
++#!/bin/sh
++minicom -D /dev/ttyACM0
+diff --git a/msg/vehicle_attitude_setpoint.msg b/msg/vehicle_attitude_setpoint.msg
+index 7bbb670..1a8e6e3 100644
+--- a/msg/vehicle_attitude_setpoint.msg
++++ b/msg/vehicle_attitude_setpoint.msg
+@@ -3,9 +3,7 @@ uint64 timestamp				# in microseconds since system start, is set whenever the wr
+ 
+ float32 roll_body				# body angle in NED frame
+ float32 pitch_body				# body angle in NED frame
+-float32 yaw_body				# body angle in NED frame
+-
+-float32 yaw_sp_move_rate		# rad/s (commanded by user)
++float32 yaw_body					# body angle in NED frame
+ 
+ float32[9] R_body				# Rotation matrix describing the setpoint as rotation from the current body frame
+ bool R_valid					# Set to true if rotation matrix is valid
+diff --git a/nuttx-configs/px4-stm32f4discovery/include/board.h b/nuttx-configs/px4-stm32f4discovery/include/board.h
+new file mode 100644
+index 0000000..b86aa80
+--- /dev/null
++++ b/nuttx-configs/px4-stm32f4discovery/include/board.h
+@@ -0,0 +1,363 @@
++/************************************************************************************
++ * configs/stm32f4discovery/include/board.h
++ * include/arch/board/board.h
++ *
++ *   Copyright (C) 2012 Gregory Nutt. All rights reserved.
++ *   Author: Gregory Nutt <gnutt@nuttx.org>
++ *
++ * Redistribution and use in source and binary forms, with or without
++ * modification, are permitted provided that the following conditions
++ * are met:
++ *
++ * 1. Redistributions of source code must retain the above copyright
++ *    notice, this list of conditions and the following disclaimer.
++ * 2. Redistributions in binary form must reproduce the above copyright
++ *    notice, this list of conditions and the following disclaimer in
++ *    the documentation and/or other materials provided with the
++ *    distribution.
++ * 3. Neither the name NuttX nor the names of its contributors may be
++ *    used to endorse or promote products derived from this software
++ *    without specific prior written permission.
++ *
++ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
++ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
++ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
++ * FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
++ * COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
++ * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
++ * BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS
++ * OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED
++ * AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
++ * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
++ * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
++ * POSSIBILITY OF SUCH DAMAGE.
++ *
++ ************************************************************************************/
++
++#ifndef __CONFIG_PX4FMU_V1_INCLUDE_BOARD_H
++#define __CONFIG_PX4FMU_V1_INCLUDE_BOARD_H
++
++/************************************************************************************
++ * Included Files
++ ************************************************************************************/
++
++#include <nuttx/config.h>
++
++#ifndef __ASSEMBLY__
++# include <stdint.h>
++#endif
++
++#include "stm32_rcc.h"
++#include "stm32_sdio.h"
++#include "stm32.h"
++
++/************************************************************************************
++ * Definitions
++ ************************************************************************************/
++
++/* Clocking *************************************************************************/
++/* The STM32F4 Discovery board features a single 8MHz crystal.  Space is provided
++ * for a 32kHz RTC backup crystal, but it is not stuffed.
++ *
++ * This is the canonical configuration:
++ *   System Clock source           : PLL (HSE)
++ *   SYSCLK(Hz)                    : 168000000    Determined by PLL configuration
++ *   HCLK(Hz)                      : 168000000    (STM32_RCC_CFGR_HPRE)
++ *   AHB Prescaler                 : 1            (STM32_RCC_CFGR_HPRE)
++ *   APB1 Prescaler                : 4            (STM32_RCC_CFGR_PPRE1)
++ *   APB2 Prescaler                : 2            (STM32_RCC_CFGR_PPRE2)
++ *   HSE Frequency(Hz)             : 8000000      (STM32_BOARD_XTAL)
++ *   PLLM                          : 8            (STM32_PLLCFG_PLLM)
++ *   PLLN                          : 336          (STM32_PLLCFG_PLLN)
++ *   PLLP                          : 2            (STM32_PLLCFG_PLLP)
++ *   PLLQ                          : 7            (STM32_PLLCFG_PLLQ)
++ *   Main regulator output voltage : Scale1 mode  Needed for high speed SYSCLK
++ *   Flash Latency(WS)             : 5
++ *   Prefetch Buffer               : OFF
++ *   Instruction cache             : ON
++ *   Data cache                    : ON
++ *   Require 48MHz for USB OTG FS, : Enabled
++ *   SDIO and RNG clock
++ */
++
++/* HSI - 16 MHz RC factory-trimmed
++ * LSI - 32 KHz RC
++ * HSE - On-board crystal frequency is 8MHz
++ * LSE - 32.768 kHz
++ */
++
++#define STM32_BOARD_XTAL        8000000ul
++
++#define STM32_HSI_FREQUENCY     16000000ul
++#define STM32_LSI_FREQUENCY     32000
++#define STM32_HSE_FREQUENCY     STM32_BOARD_XTAL
++#define STM32_LSE_FREQUENCY     32768
++
++/* Main PLL Configuration.
++ *
++ * PLL source is HSE
++ * PLL_VCO = (STM32_HSE_FREQUENCY / PLLM) * PLLN
++ *         = (8,000,000 / 8) * 336
++ *         = 336,000,000
++ * SYSCLK  = PLL_VCO / PLLP
++ *         = 336,000,000 / 2 = 168,000,000
++ * USB OTG FS, SDIO and RNG Clock
++ *         =  PLL_VCO / PLLQ
++ *         = 48,000,000
++ */
++
++#define STM32_PLLCFG_PLLM       RCC_PLLCFG_PLLM(8)
++#define STM32_PLLCFG_PLLN       RCC_PLLCFG_PLLN(336)
++#define STM32_PLLCFG_PLLP       RCC_PLLCFG_PLLP_2
++#define STM32_PLLCFG_PLLQ       RCC_PLLCFG_PLLQ(7)
++
++#define STM32_SYSCLK_FREQUENCY  168000000ul
++
++/* AHB clock (HCLK) is SYSCLK (168MHz) */
++
++#define STM32_RCC_CFGR_HPRE     RCC_CFGR_HPRE_SYSCLK  /* HCLK  = SYSCLK / 1 */
++#define STM32_HCLK_FREQUENCY    STM32_SYSCLK_FREQUENCY
++#define STM32_BOARD_HCLK        STM32_HCLK_FREQUENCY  /* same as above, to satisfy compiler */
++
++/* APB1 clock (PCLK1) is HCLK/4 (42MHz) */
++
++#define STM32_RCC_CFGR_PPRE1    RCC_CFGR_PPRE1_HCLKd4     /* PCLK1 = HCLK / 4 */
++#define STM32_PCLK1_FREQUENCY   (STM32_HCLK_FREQUENCY/4)
++
++/* Timers driven from APB1 will be twice PCLK1 */
++
++#define STM32_APB1_TIM2_CLKIN   (2*STM32_PCLK1_FREQUENCY)
++#define STM32_APB1_TIM3_CLKIN   (2*STM32_PCLK1_FREQUENCY)
++#define STM32_APB1_TIM4_CLKIN   (2*STM32_PCLK1_FREQUENCY)
++#define STM32_APB1_TIM5_CLKIN   (2*STM32_PCLK1_FREQUENCY)
++#define STM32_APB1_TIM6_CLKIN   (2*STM32_PCLK1_FREQUENCY)
++#define STM32_APB1_TIM7_CLKIN   (2*STM32_PCLK1_FREQUENCY)
++#define STM32_APB1_TIM12_CLKIN  (2*STM32_PCLK1_FREQUENCY)
++#define STM32_APB1_TIM13_CLKIN  (2*STM32_PCLK1_FREQUENCY)
++#define STM32_APB1_TIM14_CLKIN  (2*STM32_PCLK1_FREQUENCY)
++
++/* APB2 clock (PCLK2) is HCLK/2 (84MHz) */
++
++#define STM32_RCC_CFGR_PPRE2    RCC_CFGR_PPRE2_HCLKd2     /* PCLK2 = HCLK / 2 */
++#define STM32_PCLK2_FREQUENCY   (STM32_HCLK_FREQUENCY/2)
++
++/* Timers driven from APB2 will be twice PCLK2 */
++
++#define STM32_APB2_TIM1_CLKIN   (2*STM32_PCLK2_FREQUENCY)
++#define STM32_APB2_TIM8_CLKIN   (2*STM32_PCLK2_FREQUENCY)
++#define STM32_APB2_TIM9_CLKIN   (2*STM32_PCLK2_FREQUENCY)
++#define STM32_APB2_TIM10_CLKIN  (2*STM32_PCLK2_FREQUENCY)
++#define STM32_APB2_TIM11_CLKIN  (2*STM32_PCLK2_FREQUENCY)
++
++/* Timer Frequencies, if APBx is set to 1, frequency is same to APBx
++ * otherwise frequency is 2xAPBx.
++ * Note: TIM1,8 are on APB2, others on APB1
++ */
++
++#define STM32_TIM18_FREQUENCY   (2*STM32_PCLK2_FREQUENCY)
++#define STM32_TIM27_FREQUENCY   (2*STM32_PCLK1_FREQUENCY)
++
++/* SDIO dividers.  Note that slower clocking is required when DMA is disabled
++ * in order to avoid RX overrun/TX underrun errors due to delayed responses
++ * to service FIFOs in interrupt driven mode.  These values have not been
++ * tuned!!!
++ *
++ * HCLK=72MHz, SDIOCLK=72MHz, SDIO_CK=HCLK/(178+2)=400 KHz
++ */
++
++#define SDIO_INIT_CLKDIV        (178 << SDIO_CLKCR_CLKDIV_SHIFT)
++
++/* DMA ON:  HCLK=72 MHz, SDIOCLK=72MHz, SDIO_CK=HCLK/(2+2)=18 MHz
++ * DMA OFF: HCLK=72 MHz, SDIOCLK=72MHz, SDIO_CK=HCLK/(3+2)=14.4 MHz
++ */
++
++#ifdef CONFIG_SDIO_DMA
++#  define SDIO_MMCXFR_CLKDIV    (2 << SDIO_CLKCR_CLKDIV_SHIFT)
++#else
++#  define SDIO_MMCXFR_CLKDIV    (3 << SDIO_CLKCR_CLKDIV_SHIFT)
++#endif
++
++/* DMA ON:  HCLK=72 MHz, SDIOCLK=72MHz, SDIO_CK=HCLK/(1+2)=24 MHz
++ * DMA OFF: HCLK=72 MHz, SDIOCLK=72MHz, SDIO_CK=HCLK/(3+2)=14.4 MHz
++ */
++
++#ifdef CONFIG_SDIO_DMA
++#  define SDIO_SDXFR_CLKDIV     (1 << SDIO_CLKCR_CLKDIV_SHIFT)
++#else
++#  define SDIO_SDXFR_CLKDIV     (3 << SDIO_CLKCR_CLKDIV_SHIFT)
++#endif
++
++/* DMA Channl/Stream Selections *****************************************************/
++/* Stream selections are arbitrary for now but might become important in the future
++ * is we set aside more DMA channels/streams.
++ *
++ * SDIO DMA
++ *   DMAMAP_SDIO_1 = Channel 4, Stream 3 <- may later be used by SPI DMA
++ *   DMAMAP_SDIO_2 = Channel 4, Stream 6
++ */
++
++#define DMAMAP_SDIO DMAMAP_SDIO_1
++
++/* LED definitions ******************************************************************/
++/* If CONFIG_ARCH_LEDS is not defined, then the user can control the LEDs in any
++ * way.  The following definitions are used to access individual LEDs.
++ */
++
++/* LED index values for use with stm32_setled() */
++
++#define BOARD_LED1        0
++#define BOARD_LED2        1
++#define BOARD_NLEDS       2
++
++#define BOARD_LED_BLUE    BOARD_LED1
++#define BOARD_LED_RED     BOARD_LED2
++
++/* LED bits for use with stm32_setleds() */
++
++#define BOARD_LED1_BIT    (1 << BOARD_LED1)
++#define BOARD_LED2_BIT    (1 << BOARD_LED2)
++
++/* If CONFIG_ARCH_LEDs is defined, then NuttX will control the 2 LEDs on board the
++ * px4fmu-v1.  The following definitions describe how NuttX controls the LEDs:
++ */
++
++#define LED_STARTED       0  /* LED1 */
++#define LED_HEAPALLOCATE  1  /* LED2 */
++#define LED_IRQSENABLED   2  /* LED1 */
++#define LED_STACKCREATED  3  /* LED1 + LED2 */
++#define LED_INIRQ         4  /* LED1 */
++#define LED_SIGNAL        5  /* LED2 */
++#define LED_ASSERTION     6  /* LED1 + LED2 */
++#define LED_PANIC         7  /* LED1 + LED2 */
++
++/* Alternate function pin selections ************************************************/
++
++/* UART2:
++ *
++ * The STM32F4 Discovery has no on-board serial devices, but the console is
++ * brought out to PA2 (TX) and PA3 (RX) for connection to an external serial device.
++ * (See the README.txt file for other options)
++ */
++
++#define GPIO_USART2_RX GPIO_USART2_RX_1
++#define GPIO_USART2_TX GPIO_USART2_TX_1
++
++#define GPIO_USART3_RX	GPIO_USART3_RX_3
++#define GPIO_USART3_TX	GPIO_USART3_TX_3
++#define GPIO_USART3_RTS	GPIO_USART3_RTS_2
++#define GPIO_USART3_CTS	GPIO_USART3_CTS_2
++
++#define GPIO_UART4_RX	GPIO_UART4_RX_1
++#define GPIO_UART4_TX	GPIO_UART4_TX_1
++
++#define GPIO_USART6_RX	GPIO_USART6_RX_1
++#define GPIO_USART6_TX	GPIO_USART6_TX_1
++
++#define GPIO_UART7_RX	GPIO_UART7_RX_1
++#define GPIO_UART7_TX	GPIO_UART7_TX_1
++
++/* UART RX DMA configurations */
++#define DMAMAP_USART1_RX DMAMAP_USART1_RX_2
++#define DMAMAP_USART6_RX DMAMAP_USART6_RX_2
++
++/*
++ * CAN
++ *
++ * CAN1 is routed to the onboard transceiver.
++ * CAN2 is routed to the expansion connector.
++ */
++#define GPIO_CAN1_RX	GPIO_CAN1_RX_3
++#define GPIO_CAN1_TX	GPIO_CAN1_TX_3
++#define GPIO_CAN2_RX	GPIO_CAN2_RX_1
++#define GPIO_CAN2_TX	GPIO_CAN2_TX_2
++ 
++/* SPI - There is a MEMS device on SPI1 using these pins: */
++
++#define GPIO_SPI1_MISO GPIO_SPI1_MISO_1
++#define GPIO_SPI1_MOSI GPIO_SPI1_MOSI_1
++#define GPIO_SPI1_SCK  GPIO_SPI1_SCK_1
++#define GPIO_SPI2_MISO  (GPIO_SPI2_MISO_1|GPIO_SPEED_50MHz)
++#define GPIO_SPI2_MOSI  (GPIO_SPI2_MOSI_1|GPIO_SPEED_50MHz)
++#define GPIO_SPI2_SCK   (GPIO_SPI2_SCK_2|GPIO_SPEED_50MHz)
++#define GPIO_SPI3_MISO  (GPIO_SPI3_MISO_1|GPIO_SPEED_50MHz)
++#define GPIO_SPI3_MOSI  (GPIO_SPI3_MOSI_1|GPIO_SPEED_50MHz)
++#define GPIO_SPI3_SCK   (GPIO_SPI3_SCK_1|GPIO_SPEED_50MHz)
++#define GPIO_SPI3_NSS   (GPIO_SPI3_NSS_1|GPIO_SPEED_50MHz)
++
++
++/*
++ * I2C
++ *
++ * The optional _GPIO configurations allow the I2C driver to manually
++ * reset the bus to clear stuck slaves.  They match the pin configuration,
++ * but are normally-high GPIOs.
++ */
++#define GPIO_I2C1_SCL		GPIO_I2C1_SCL_1
++#define GPIO_I2C1_SDA		GPIO_I2C1_SDA_2
++#define GPIO_I2C1_SCL_GPIO	(GPIO_OUTPUT|GPIO_OPENDRAIN|GPIO_SPEED_50MHz|GPIO_OUTPUT_SET|GPIO_PORTB|GPIO_PIN6)
++#define GPIO_I2C1_SDA_GPIO	(GPIO_OUTPUT|GPIO_OPENDRAIN|GPIO_SPEED_50MHz|GPIO_OUTPUT_SET|GPIO_PORTB|GPIO_PIN9)
++
++
++#define GPIO_I2C2_SCL		GPIO_I2C2_SCL_1
++#define GPIO_I2C2_SDA		GPIO_I2C2_SDA_1
++#define GPIO_I2C2_SCL_GPIO	(GPIO_OUTPUT|GPIO_OPENDRAIN|GPIO_SPEED_50MHz|GPIO_OUTPUT_SET|GPIO_PORTB|GPIO_PIN10)
++#define GPIO_I2C2_SDA_GPIO	(GPIO_OUTPUT|GPIO_OPENDRAIN|GPIO_SPEED_50MHz|GPIO_OUTPUT_SET|GPIO_PORTB|GPIO_PIN11)
++
++#define GPIO_I2C3_SCL		GPIO_I2C3_SCL_1
++#define GPIO_I2C3_SDA		GPIO_I2C3_SDA_1
++#define GPIO_I2C3_SCL_GPIO	(GPIO_OUTPUT|GPIO_OPENDRAIN|GPIO_SPEED_50MHz|GPIO_OUTPUT_SET|GPIO_PORTA|GPIO_PIN8)
++#define GPIO_I2C3_SDA_GPIO	(GPIO_OUTPUT|GPIO_OPENDRAIN|GPIO_SPEED_50MHz|GPIO_OUTPUT_SET|GPIO_PORTC|GPIO_PIN9)
++
++
++/************************************************************************************
++ * Public Data
++ ************************************************************************************/
++
++#ifndef __ASSEMBLY__
++
++#undef EXTERN
++#if defined(__cplusplus)
++#define EXTERN extern "C"
++extern "C" {
++#else
++#define EXTERN extern
++#endif
++
++/************************************************************************************
++ * Public Function Prototypes
++ ************************************************************************************/
++/************************************************************************************
++ * Name: stm32_boardinitialize
++ *
++ * Description:
++ *   All STM32 architectures must provide the following entry point.  This entry point
++ *   is called early in the intitialization -- after all memory has been configured
++ *   and mapped but before any devices have been initialized.
++ *
++ ************************************************************************************/
++
++EXTERN void stm32_boardinitialize(void);
++
++/************************************************************************************
++ * Name:  stm32_ledinit, stm32_setled, and stm32_setleds
++ *
++ * Description:
++ *   If CONFIG_ARCH_LEDS is defined, then NuttX will control the on-board LEDs.  If
++ *   CONFIG_ARCH_LEDS is not defined, then the following interfacesare available to
++ *   control the LEDs from user applications.
++ *
++ ************************************************************************************/
++
++#ifndef CONFIG_ARCH_LEDS
++EXTERN void stm32_ledinit(void);
++EXTERN void stm32_setled(int led, bool ledon);
++EXTERN void stm32_setleds(uint8_t ledset);
++#endif
++
++#undef EXTERN
++#if defined(__cplusplus)
++}
++#endif
++
++#endif /* __ASSEMBLY__ */
++#endif  /* __CONFIG_PX4FMU_V1_INCLUDE_BOARD_H */
+diff --git a/nuttx-configs/px4-stm32f4discovery/include/nsh_romfsimg.h b/nuttx-configs/px4-stm32f4discovery/include/nsh_romfsimg.h
+new file mode 100644
+index 0000000..15e4e7a
+--- /dev/null
++++ b/nuttx-configs/px4-stm32f4discovery/include/nsh_romfsimg.h
+@@ -0,0 +1,42 @@
++/****************************************************************************
++ *
++ *   Copyright (C) 2013 PX4 Development Team. All rights reserved.
++ *
++ * Redistribution and use in source and binary forms, with or without
++ * modification, are permitted provided that the following conditions
++ * are met:
++ *
++ * 1. Redistributions of source code must retain the above copyright
++ *    notice, this list of conditions and the following disclaimer.
++ * 2. Redistributions in binary form must reproduce the above copyright
++ *    notice, this list of conditions and the following disclaimer in
++ *    the documentation and/or other materials provided with the
++ *    distribution.
++ * 3. Neither the name PX4 nor the names of its contributors may be
++ *    used to endorse or promote products derived from this software
++ *    without specific prior written permission.
++ *
++ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
++ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
++ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
++ * FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
++ * COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
++ * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
++ * BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS
++ * OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED
++ * AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
++ * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
++ * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
++ * POSSIBILITY OF SUCH DAMAGE.
++ *
++ ****************************************************************************/
++
++/**
++ * nsh_romfsetc.h
++ *
++ * This file is a stub for 'make export' purposes; the actual ROMFS
++ * must be supplied by the library client.
++ */
++
++extern unsigned char romfs_img[];
++extern unsigned int romfs_img_len;
+diff --git a/nuttx-configs/px4-stm32f4discovery/nsh/Make.defs b/nuttx-configs/px4-stm32f4discovery/nsh/Make.defs
+new file mode 100644
+index 0000000..e70320a
+--- /dev/null
++++ b/nuttx-configs/px4-stm32f4discovery/nsh/Make.defs
+@@ -0,0 +1,179 @@
++############################################################################
++# configs/px4fmu-v2/nsh/Make.defs
++#
++#   Copyright (C) 2011 Gregory Nutt. All rights reserved.
++#   Author: Gregory Nutt <gnutt@nuttx.org>
++#
++# Redistribution and use in source and binary forms, with or without
++# modification, are permitted provided that the following conditions
++# are met:
++#
++# 1. Redistributions of source code must retain the above copyright
++#    notice, this list of conditions and the following disclaimer.
++# 2. Redistributions in binary form must reproduce the above copyright
++#    notice, this list of conditions and the following disclaimer in
++#    the documentation and/or other materials provided with the
++#    distribution.
++# 3. Neither the name NuttX nor the names of its contributors may be
++#    used to endorse or promote products derived from this software
++#    without specific prior written permission.
++#
++# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
++# "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
++# LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
++# FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
++# COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
++# INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
++# BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS
++# OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED
++# AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
++# LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
++# ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
++# POSSIBILITY OF SUCH DAMAGE.
++#
++############################################################################
++
++include ${TOPDIR}/.config
++include ${TOPDIR}/tools/Config.mk
++
++#
++# We only support building with the ARM bare-metal toolchain from
++# https://launchpad.net/gcc-arm-embedded on Windows, Linux or Mac OS.
++#
++CONFIG_ARMV7M_TOOLCHAIN	:= GNU_EABI
++
++include ${TOPDIR}/arch/arm/src/armv7-m/Toolchain.defs
++
++CC			 = $(CROSSDEV)gcc
++CXX			 = $(CROSSDEV)g++
++CPP			 = $(CROSSDEV)gcc -E
++LD			 = $(CROSSDEV)ld
++AR			 = $(CROSSDEV)ar rcs
++NM			 = $(CROSSDEV)nm
++OBJCOPY			 = $(CROSSDEV)objcopy
++OBJDUMP			 = $(CROSSDEV)objdump
++
++MAXOPTIMIZATION		 = -O3
++ARCHCPUFLAGS		 = -mcpu=cortex-m4 \
++			   -mthumb \
++			   -march=armv7e-m \
++			   -mfpu=fpv4-sp-d16 \
++			   -mfloat-abi=hard
++
++
++# enable precise stack overflow tracking
++INSTRUMENTATIONDEFINES	 = -finstrument-functions \
++			   -ffixed-r10
++
++# pull in *just* libm from the toolchain ... this is grody
++LIBM			 = "${shell $(CC) $(ARCHCPUFLAGS) -print-file-name=libm.a}"
++EXTRA_LIBS		+= $(LIBM)
++
++# use our linker script
++LDSCRIPT		 = ld.script
++
++ifeq ($(WINTOOL),y)
++  # Windows-native toolchains
++  DIRLINK		 = $(TOPDIR)/tools/copydir.sh
++  DIRUNLINK		 = $(TOPDIR)/tools/unlink.sh
++  MKDEP			 = $(TOPDIR)/tools/mknulldeps.sh
++  ARCHINCLUDES		 = -I. -isystem "${shell cygpath -w $(TOPDIR)/include}"
++  ARCHXXINCLUDES	 = -I. -isystem "${shell cygpath -w $(TOPDIR)/include}" -isystem "${shell cygpath -w $(TOPDIR)/include/cxx}"
++  ARCHSCRIPT		 = -T "${shell cygpath -w $(TOPDIR)/configs/$(CONFIG_ARCH_BOARD)/scripts/$(LDSCRIPT)}"
++else
++  ifeq ($(PX4_WINTOOL),y)
++    # Windows-native toolchains (MSYS)
++    DIRLINK		 = $(TOPDIR)/tools/copydir.sh
++    DIRUNLINK		 = $(TOPDIR)/tools/unlink.sh
++    MKDEP		 = $(TOPDIR)/tools/mknulldeps.sh
++    ARCHINCLUDES	 = -I. -isystem $(TOPDIR)/include
++    ARCHXXINCLUDES	 = -I. -isystem $(TOPDIR)/include -isystem $(TOPDIR)/include/cxx
++    ARCHSCRIPT		 = -T$(TOPDIR)/configs/$(CONFIG_ARCH_BOARD)/scripts/$(LDSCRIPT)
++  else
++    # Linux/Cygwin-native toolchain 
++    MKDEP		 = $(TOPDIR)/tools/mkdeps.sh
++    ARCHINCLUDES	 = -I. -isystem $(TOPDIR)/include
++    ARCHXXINCLUDES	 = -I. -isystem $(TOPDIR)/include -isystem $(TOPDIR)/include/cxx
++    ARCHSCRIPT		 = -T$(TOPDIR)/configs/$(CONFIG_ARCH_BOARD)/scripts/$(LDSCRIPT)
++  endif
++endif
++
++# tool versions
++ARCHCCVERSION		 = ${shell $(CC) -v 2>&1 | sed -n '/^gcc version/p' | sed -e 's/^gcc version \([0-9\.]\)/\1/g' -e 's/[-\ ].*//g' -e '1q'}
++ARCHCCMAJOR		 = ${shell echo $(ARCHCCVERSION) | cut -d'.' -f1}
++
++# optimisation flags
++ARCHOPTIMIZATION	 = $(MAXOPTIMIZATION) \
++			   -fno-strict-aliasing \
++			   -fno-strength-reduce \
++			   -fomit-frame-pointer \
++   			   -funsafe-math-optimizations \
++   			   -fno-builtin-printf \
++   			   -ffunction-sections \
++   			   -fdata-sections
++
++ifeq ("${CONFIG_DEBUG_SYMBOLS}","y")
++ARCHOPTIMIZATION	+= -g
++endif
++
++ARCHCFLAGS		 = -std=gnu99
++ARCHCXXFLAGS		 = -fno-exceptions -fno-rtti -std=gnu++0x
++ARCHWARNINGS		 = -Wall \
++			   -Wextra \
++			   -Wdouble-promotion \
++			   -Wshadow \
++			   -Wfloat-equal \
++			   -Wframe-larger-than=1024 \
++			   -Wpointer-arith \
++			   -Wlogical-op \
++			   -Wmissing-declarations \
++			   -Wpacked \
++			   -Wno-unused-parameter
++#   -Wcast-qual  - generates spurious noreturn attribute warnings, try again later
++#   -Wconversion - would be nice, but too many "risky-but-safe" conversions in the code
++#   -Wcast-align - would help catch bad casts in some cases, but generates too many false positives
++
++ARCHCWARNINGS		 = $(ARCHWARNINGS) \
++			   -Wbad-function-cast \
++			   -Wstrict-prototypes \
++			   -Wold-style-declaration \
++			   -Wmissing-parameter-type \
++			   -Wmissing-prototypes \
++			   -Wnested-externs \
++			   -Wunsuffixed-float-constants
++ARCHWARNINGSXX		 = $(ARCHWARNINGS) \
++			   -Wno-psabi
++ARCHDEFINES		 =
++ARCHPICFLAGS		 = -fpic -msingle-pic-base -mpic-register=r10
++
++# this seems to be the only way to add linker flags
++EXTRA_LIBS		+= --warn-common \
++			   --gc-sections
++
++CFLAGS			 = $(ARCHCFLAGS) $(ARCHCWARNINGS) $(ARCHOPTIMIZATION) $(ARCHCPUFLAGS) $(ARCHINCLUDES) $(INSTRUMENTATIONDEFINES) $(ARCHDEFINES) $(EXTRADEFINES) -pipe -fno-common
++CPICFLAGS		 = $(ARCHPICFLAGS) $(CFLAGS)
++CXXFLAGS		 = $(ARCHCXXFLAGS) $(ARCHWARNINGSXX) $(ARCHOPTIMIZATION) $(ARCHCPUFLAGS) $(ARCHXXINCLUDES) $(INSTRUMENTATIONDEFINES) $(ARCHDEFINES) $(EXTRADEFINES) -pipe
++CXXPICFLAGS		 = $(ARCHPICFLAGS) $(CXXFLAGS)
++CPPFLAGS		 = $(ARCHINCLUDES) $(INSTRUMENTATIONDEFINES) $(ARCHDEFINES) $(EXTRADEFINES)
++AFLAGS			 = $(CFLAGS) -D__ASSEMBLY__
++
++NXFLATLDFLAGS1		 = -r -d -warn-common
++NXFLATLDFLAGS2		 = $(NXFLATLDFLAGS1) -T$(TOPDIR)/binfmt/libnxflat/gnu-nxflat.ld -no-check-sections
++LDNXFLATFLAGS		 = -e main -s 2048
++
++OBJEXT			 = .o
++LIBEXT			 = .a
++EXEEXT			 =
++
++
++# produce partially-linked $1 from files in $2
++define PRELINK
++	@echo "PRELINK: $1"
++	$(Q) $(LD) -Ur -o $1 $2 && $(OBJCOPY) --localize-hidden $1
++endef
++
++HOSTCC			 = gcc
++HOSTINCLUDES		 = -I.
++HOSTCFLAGS		 = -Wall -Wstrict-prototypes -Wshadow -g -pipe
++HOSTLDFLAGS		 =
++
+diff --git a/nuttx-configs/px4-stm32f4discovery/nsh/appconfig b/nuttx-configs/px4-stm32f4discovery/nsh/appconfig
+new file mode 100644
+index 0000000..f14ab40
+--- /dev/null
++++ b/nuttx-configs/px4-stm32f4discovery/nsh/appconfig
+@@ -0,0 +1,48 @@
++############################################################################
++# configs/px4fmu/nsh/appconfig
++#
++#   Copyright (C) 2011 Gregory Nutt. All rights reserved.
++#   Author: Gregory Nutt <gnutt@nuttx.org>
++#
++# Redistribution and use in source and binary forms, with or without
++# modification, are permitted provided that the following conditions
++# are met:
++#
++# 1. Redistributions of source code must retain the above copyright
++#    notice, this list of conditions and the following disclaimer.
++# 2. Redistributions in binary form must reproduce the above copyright
++#    notice, this list of conditions and the following disclaimer in
++#    the documentation and/or other materials provided with the
++#    distribution.
++# 3. Neither the name NuttX nor the names of its contributors may be
++#    used to endorse or promote products derived from this software
++#    without specific prior written permission.
++#
++# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
++# "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
++# LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
++# FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
++# COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
++# INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
++# BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS
++# OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED
++# AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
++# LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
++# ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
++# POSSIBILITY OF SUCH DAMAGE.
++#
++############################################################################
++
++# Path to example in apps/examples containing the user_start entry point
++
++CONFIGURED_APPS	+= examples/nsh
++
++# The NSH application library
++CONFIGURED_APPS += nshlib
++CONFIGURED_APPS += system/readline
++
++#ifeq ($(CONFIG_USBDEV),y)
++#ifeq ($(CONFIG_CDCACM),y)
++CONFIGURED_APPS += examples/cdcacm
++#endif
++#endif
+diff --git a/nuttx-configs/px4-stm32f4discovery/nsh/defconfig b/nuttx-configs/px4-stm32f4discovery/nsh/defconfig
+new file mode 100644
+index 0000000..8636f33
+--- /dev/null
++++ b/nuttx-configs/px4-stm32f4discovery/nsh/defconfig
+@@ -0,0 +1,1008 @@
++#
++# Automatically generated file; DO NOT EDIT.
++# Nuttx/ Configuration
++#
++CONFIG_NUTTX_NEWCONFIG=y
++
++#
++# Build Setup
++#
++# CONFIG_EXPERIMENTAL is not set
++# CONFIG_HOST_LINUX is not set
++CONFIG_HOST_OSX=y
++# CONFIG_HOST_WINDOWS is not set
++# CONFIG_HOST_OTHER is not set
++
++#
++# Build Configuration
++#
++CONFIG_APPS_DIR="../apps"
++# CONFIG_BUILD_2PASS is not set
++
++#
++# Binary Output Formats
++#
++# CONFIG_RRLOAD_BINARY is not set
++# CONFIG_INTELHEX_BINARY is not set
++# CONFIG_MOTOROLA_SREC is not set
++CONFIG_RAW_BINARY=y
++
++#
++# Customize Header Files
++#
++# CONFIG_ARCH_STDBOOL_H is not set
++CONFIG_ARCH_MATH_H=y
++# CONFIG_ARCH_FLOAT_H is not set
++# CONFIG_ARCH_STDARG_H is not set
++
++#
++# Debug Options
++#
++# CONFIG_DEBUG is not set
++CONFIG_DEBUG_SYMBOLS=y
++
++#
++# System Type
++#
++# CONFIG_ARCH_8051 is not set
++CONFIG_ARCH_ARM=y
++# CONFIG_ARCH_AVR is not set
++# CONFIG_ARCH_HC is not set
++# CONFIG_ARCH_MIPS is not set
++# CONFIG_ARCH_RGMP is not set
++# CONFIG_ARCH_SH is not set
++# CONFIG_ARCH_SIM is not set
++# CONFIG_ARCH_X86 is not set
++# CONFIG_ARCH_Z16 is not set
++# CONFIG_ARCH_Z80 is not set
++CONFIG_ARCH="arm"
++
++#
++# ARM Options
++#
++# CONFIG_ARCH_CHIP_C5471 is not set
++# CONFIG_ARCH_CHIP_CALYPSO is not set
++# CONFIG_ARCH_CHIP_DM320 is not set
++# CONFIG_ARCH_CHIP_IMX is not set
++# CONFIG_ARCH_CHIP_KINETIS is not set
++# CONFIG_ARCH_CHIP_KL is not set
++# CONFIG_ARCH_CHIP_LM is not set
++# CONFIG_ARCH_CHIP_LPC17XX is not set
++# CONFIG_ARCH_CHIP_LPC214X is not set
++# CONFIG_ARCH_CHIP_LPC2378 is not set
++# CONFIG_ARCH_CHIP_LPC31XX is not set
++# CONFIG_ARCH_CHIP_LPC43XX is not set
++# CONFIG_ARCH_CHIP_NUC1XX is not set
++# CONFIG_ARCH_CHIP_SAM34 is not set
++CONFIG_ARCH_CHIP_STM32=y
++# CONFIG_ARCH_CHIP_STR71X is not set
++CONFIG_ARCH_CORTEXM4=y
++CONFIG_ARCH_FAMILY="armv7-m"
++CONFIG_ARCH_CHIP="stm32"
++CONFIG_ARMV7M_USEBASEPRI=y
++CONFIG_ARCH_HAVE_CMNVECTOR=y
++CONFIG_ARMV7M_CMNVECTOR=y
++CONFIG_ARCH_HAVE_FPU=y
++CONFIG_ARCH_FPU=y
++CONFIG_ARCH_HAVE_MPU=y
++# CONFIG_ARMV7M_MPU is not set
++
++#
++# ARMV7M Configuration Options
++#
++# CONFIG_ARMV7M_TOOLCHAIN_BUILDROOT is not set
++CONFIG_ARMV7M_TOOLCHAIN_GNU_EABI=y
++CONFIG_ARMV7M_STACKCHECK=y
++CONFIG_SERIAL_TERMIOS=y
++
++#
++# STM32 Configuration Options
++#
++# CONFIG_ARCH_CHIP_STM32L151C6 is not set
++# CONFIG_ARCH_CHIP_STM32L151C8 is not set
++# CONFIG_ARCH_CHIP_STM32L151CB is not set
++# CONFIG_ARCH_CHIP_STM32L151R6 is not set
++# CONFIG_ARCH_CHIP_STM32L151R8 is not set
++# CONFIG_ARCH_CHIP_STM32L151RB is not set
++# CONFIG_ARCH_CHIP_STM32L151V6 is not set
++# CONFIG_ARCH_CHIP_STM32L151V8 is not set
++# CONFIG_ARCH_CHIP_STM32L151VB is not set
++# CONFIG_ARCH_CHIP_STM32L152C6 is not set
++# CONFIG_ARCH_CHIP_STM32L152C8 is not set
++# CONFIG_ARCH_CHIP_STM32L152CB is not set
++# CONFIG_ARCH_CHIP_STM32L152R6 is not set
++# CONFIG_ARCH_CHIP_STM32L152R8 is not set
++# CONFIG_ARCH_CHIP_STM32L152RB is not set
++# CONFIG_ARCH_CHIP_STM32L152V6 is not set
++# CONFIG_ARCH_CHIP_STM32L152V8 is not set
++# CONFIG_ARCH_CHIP_STM32L152VB is not set
++# CONFIG_ARCH_CHIP_STM32F100C8 is not set
++# CONFIG_ARCH_CHIP_STM32F100CB is not set
++# CONFIG_ARCH_CHIP_STM32F100R8 is not set
++# CONFIG_ARCH_CHIP_STM32F100RB is not set
++# CONFIG_ARCH_CHIP_STM32F100RC is not set
++# CONFIG_ARCH_CHIP_STM32F100RD is not set
++# CONFIG_ARCH_CHIP_STM32F100RE is not set
++# CONFIG_ARCH_CHIP_STM32F100V8 is not set
++# CONFIG_ARCH_CHIP_STM32F100VB is not set
++# CONFIG_ARCH_CHIP_STM32F100VC is not set
++# CONFIG_ARCH_CHIP_STM32F100VD is not set
++# CONFIG_ARCH_CHIP_STM32F100VE is not set
++# CONFIG_ARCH_CHIP_STM32F103C4 is not set
++# CONFIG_ARCH_CHIP_STM32F103C8 is not set
++# CONFIG_ARCH_CHIP_STM32F103RET6 is not set
++# CONFIG_ARCH_CHIP_STM32F103VCT6 is not set
++# CONFIG_ARCH_CHIP_STM32F103VET6 is not set
++# CONFIG_ARCH_CHIP_STM32F103ZET6 is not set
++# CONFIG_ARCH_CHIP_STM32F105VBT7 is not set
++# CONFIG_ARCH_CHIP_STM32F107VC is not set
++# CONFIG_ARCH_CHIP_STM32F207IG is not set
++# CONFIG_ARCH_CHIP_STM32F302CB is not set
++# CONFIG_ARCH_CHIP_STM32F302CC is not set
++# CONFIG_ARCH_CHIP_STM32F302RB is not set
++# CONFIG_ARCH_CHIP_STM32F302RC is not set
++# CONFIG_ARCH_CHIP_STM32F302VB is not set
++# CONFIG_ARCH_CHIP_STM32F302VC is not set
++# CONFIG_ARCH_CHIP_STM32F303CB is not set
++# CONFIG_ARCH_CHIP_STM32F303CC is not set
++# CONFIG_ARCH_CHIP_STM32F303RB is not set
++# CONFIG_ARCH_CHIP_STM32F303RC is not set
++# CONFIG_ARCH_CHIP_STM32F303VB is not set
++# CONFIG_ARCH_CHIP_STM32F303VC is not set
++# CONFIG_ARCH_CHIP_STM32F405RG is not set
++# CONFIG_ARCH_CHIP_STM32F405VG is not set
++# CONFIG_ARCH_CHIP_STM32F405ZG is not set
++# CONFIG_ARCH_CHIP_STM32F407VE is not set
++CONFIG_ARCH_CHIP_STM32F407VG=y
++# CONFIG_ARCH_CHIP_STM32F407ZE is not set
++# CONFIG_ARCH_CHIP_STM32F407ZG is not set
++# CONFIG_ARCH_CHIP_STM32F407IE is not set
++# CONFIG_ARCH_CHIP_STM32F407IG is not set
++# CONFIG_ARCH_CHIP_STM32F427V is not set
++# CONFIG_ARCH_CHIP_STM32F427Z is not set
++# CONFIG_ARCH_CHIP_STM32F427I is not set
++# CONFIG_STM32_STM32L15XX is not set
++# CONFIG_STM32_ENERGYLITE is not set
++# CONFIG_STM32_STM32F10XX is not set
++# CONFIG_STM32_VALUELINE is not set
++# CONFIG_STM32_CONNECTIVITYLINE is not set
++# CONFIG_STM32_PERFORMANCELINE is not set
++# CONFIG_STM32_HIGHDENSITY is not set
++# CONFIG_STM32_MEDIUMDENSITY is not set
++# CONFIG_STM32_LOWDENSITY is not set
++# CONFIG_STM32_STM32F20XX is not set
++# CONFIG_STM32_STM32F30XX is not set
++CONFIG_STM32_STM32F40XX=y
++# CONFIG_STM32_STM32F427 is not set
++# CONFIG_STM32_DFU is not set
++
++#
++# STM32 Peripheral Support
++#
++CONFIG_STM32_ADC1=y
++# CONFIG_STM32_ADC2 is not set
++# CONFIG_STM32_ADC3 is not set
++CONFIG_STM32_BKPSRAM=y
++# CONFIG_STM32_CAN1 is not set
++# CONFIG_STM32_CAN2 is not set
++CONFIG_STM32_CCMDATARAM=y
++# CONFIG_STM32_CRC is not set
++# CONFIG_STM32_CRYP is not set
++CONFIG_STM32_DMA1=y
++CONFIG_STM32_DMA2=y
++# CONFIG_STM32_DAC1 is not set
++# CONFIG_STM32_DAC2 is not set
++# CONFIG_STM32_DCMI is not set
++# CONFIG_STM32_ETHMAC is not set
++# CONFIG_STM32_FSMC is not set
++# CONFIG_STM32_HASH is not set
++CONFIG_STM32_I2C1=y
++CONFIG_STM32_I2C2=y
++# CONFIG_STM32_I2C2 is not set
++# CONFIG_STM32_I2C3 is not set
++CONFIG_STM32_OTGFS=y
++# CONFIG_STM32_OTGHS is not set
++CONFIG_STM32_PWR=y
++# CONFIG_STM32_RNG is not set
++# CONFIG_STM32_SDIO is not set
++CONFIG_STM32_SPI1=y
++CONFIG_STM32_SPI2=y
++CONFIG_STM32_SPI3=y
++
++# CONFIG_STM32_SPI2 is not set
++# CONFIG_STM32_SPI3 is not set
++# CONFIG_STM32_SPI4 is not set
++# CONFIG_STM32_SPI5 is not set
++# CONFIG_STM32_SPI6 is not set
++CONFIG_STM32_SYSCFG=y
++CONFIG_STM32_TIM1=y
++# CONFIG_STM32_TIM2 is not set
++CONFIG_STM32_TIM3=y
++CONFIG_STM32_TIM4=y
++# CONFIG_STM32_TIM5 is not set
++# CONFIG_STM32_TIM6 is not set
++# CONFIG_STM32_TIM7 is not set
++# CONFIG_STM32_TIM8 is not set
++CONFIG_STM32_TIM9=y
++CONFIG_STM32_TIM10=y
++CONFIG_STM32_TIM11=y
++# CONFIG_STM32_TIM12 is not set
++# CONFIG_STM32_TIM13 is not set
++# CONFIG_STM32_TIM14 is not set
++# CONFIG_STM32_USART1 is not set
++CONFIG_STM32_USART2=y
++CONFIG_STM32_USART3=y
++CONFIG_STM32_UART4=y
++# CONFIG_STM32_UART5 is not set
++# CONFIG_STM32_USART6 is not set
++CONFIG_STM32_USART6=y
++CONFIG_STM32_UART7=y
++CONFIG_STM32_UART8=y
++# CONFIG_STM32_IWDG is not set
++# CONFIG_STM32_WWDG is not set
++CONFIG_STM32_ADC=y
++CONFIG_STM32_SPI=y
++CONFIG_STM32_I2C=y
++
++#
++# Alternate Pin Mapping
++#
++CONFIG_STM32_FLASH_PREFETCH=y
++# CONFIG_STM32_JTAG_DISABLE is not set
++# CONFIG_STM32_JTAG_FULL_ENABLE is not set
++# CONFIG_STM32_JTAG_NOJNTRST_ENABLE is not set
++CONFIG_STM32_JTAG_SW_ENABLE=y
++CONFIG_STM32_DISABLE_IDLE_SLEEP_DURING_DEBUG=y
++# CONFIG_STM32_FORCEPOWER is not set
++# CONFIG_ARCH_BOARD_STM32_CUSTOM_CLOCKCONFIG is not set
++# CONFIG_STM32_CCMEXCLUDE is not set
++CONFIG_STM32_DMACAPABLE=y
++# CONFIG_STM32_TIM1_PWM is not set
++# CONFIG_STM32_TIM3_PWM is not set
++# CONFIG_STM32_TIM4_PWM is not set
++# CONFIG_STM32_TIM9_PWM is not set
++# CONFIG_STM32_TIM10_PWM is not set
++# CONFIG_STM32_TIM11_PWM is not set
++# CONFIG_STM32_TIM1_ADC is not set
++# CONFIG_STM32_TIM3_ADC is not set
++# CONFIG_STM32_TIM4_ADC is not set
++CONFIG_STM32_USART=y
++
++#
++# U[S]ART Configuration
++#
++# CONFIG_USART2_RS485 is not set
++CONFIG_USART2_RXDMA=y
++CONFIG_USART3_RXDMA=y
++CONFIG_UART4_RXDMA=y
++CONFIG_USART6_RXDMA=y
++CONFIG_USART7_RXDMA=y
++CONFIG_USART8_RXDMA=y
++CONFIG_SERIAL_DISABLE_REORDERING=y
++CONFIG_STM32_USART_SINGLEWIRE=y
++
++#
++# SPI Configuration
++#
++# CONFIG_STM32_SPI_INTERRUPTS is not set
++# CONFIG_STM32_SPI_DMA is not set
++
++#
++# I2C Configuration
++#
++# CONFIG_STM32_I2C_DYNTIMEO is not set
++CONFIG_STM32_I2CTIMEOSEC=0
++CONFIG_STM32_I2CTIMEOMS=500
++CONFIG_STM32_I2CTIMEOTICKS=500
++# CONFIG_STM32_I2C_DUTY16_9 is not set
++
++#
++# USB Host Configuration
++#
++
++#
++# USB Device Configuration
++#
++
++#
++# External Memory Configuration
++#
++
++#
++# Architecture Options
++#
++# CONFIG_ARCH_NOINTC is not set
++# CONFIG_ARCH_VECNOTIRQ is not set
++CONFIG_ARCH_DMA=y
++#CONFIG_ARCH_IRQPRIO=y
++# CONFIG_CUSTOM_STACK is not set
++# CONFIG_ADDRENV is not set
++CONFIG_ARCH_HAVE_VFORK=y
++CONFIG_ARCH_STACKDUMP=y
++# CONFIG_ENDIAN_BIG is not set
++# CONFIG_ARCH_HAVE_RAMFUNCS is not set
++CONFIG_ARCH_HAVE_RAMVECTORS=y
++# CONFIG_ARCH_RAMVECTORS is not set
++
++#
++# Board Settings
++#
++CONFIG_BOARD_LOOPSPERMSEC=16717
++# CONFIG_ARCH_CALIBRATION is not set
++CONFIG_DRAM_START=0x20000000
++CONFIG_DRAM_SIZE=196608
++CONFIG_ARCH_HAVE_INTERRUPTSTACK=y
++CONFIG_ARCH_INTERRUPTSTACK=4096
++
++#
++# Boot options
++#
++# CONFIG_BOOT_RUNFROMEXTSRAM is not set
++CONFIG_BOOT_RUNFROMFLASH=y
++# CONFIG_BOOT_RUNFROMISRAM is not set
++# CONFIG_BOOT_RUNFROMSDRAM is not set
++# CONFIG_BOOT_COPYTORAM is not set
++
++#
++# Board Selection
++#
++CONFIG_ARCH_BOARD_CUSTOM=y
++CONFIG_ARCH_BOARD=""
++
++#
++# Common Board Options
++#
++CONFIG_NSH_MMCSDMINOR=0
++CONFIG_MMCSD_SPI=y
++CONFIG_MMCSD_SPICLOCK=24000000
++
++#
++# Board-Specific Options
++#
++
++#
++# RTOS Features
++#
++# CONFIG_BOARD_INITIALIZE is not set
++CONFIG_MSEC_PER_TICK=1
++CONFIG_RR_INTERVAL=0
++CONFIG_SCHED_INSTRUMENTATION=y
++CONFIG_TASK_NAME_SIZE=24
++# CONFIG_SCHED_HAVE_PARENT is not set
++# CONFIG_JULIAN_TIME is not set
++CONFIG_START_YEAR=1970
++CONFIG_START_MONTH=1
++CONFIG_START_DAY=1
++CONFIG_DEV_CONSOLE=y
++# CONFIG_MUTEX_TYPES is not set
++CONFIG_PRIORITY_INHERITANCE=y
++CONFIG_SEM_PREALLOCHOLDERS=0
++CONFIG_SEM_NNESTPRIO=8
++# CONFIG_FDCLONE_DISABLE is not set
++CONFIG_FDCLONE_STDIO=y
++CONFIG_SDCLONE_DISABLE=y
++CONFIG_SCHED_WAITPID=y
++# CONFIG_SCHED_STARTHOOK is not set
++CONFIG_SCHED_ATEXIT=y
++CONFIG_SCHED_ATEXIT_MAX=1
++# CONFIG_SCHED_ONEXIT is not set
++CONFIG_USER_ENTRYPOINT="nsh_main"
++# CONFIG_DISABLE_OS_API is not set
++
++#
++# Signal Numbers
++#
++CONFIG_SIG_SIGUSR1=1
++CONFIG_SIG_SIGUSR2=2
++CONFIG_SIG_SIGALARM=3
++CONFIG_SIG_SIGCONDTIMEDOUT=16
++CONFIG_SIG_SIGWORK=4
++
++#
++# Sizes of configurable things (0 disables)
++#
++CONFIG_MAX_TASKS=32
++CONFIG_MAX_TASK_ARGS=10
++CONFIG_NPTHREAD_KEYS=4
++CONFIG_NFILE_DESCRIPTORS=32
++CONFIG_NFILE_STREAMS=8
++CONFIG_NAME_MAX=32
++CONFIG_PREALLOC_MQ_MSGS=4
++CONFIG_MQ_MAXMSGSIZE=32
++CONFIG_MAX_WDOGPARMS=2
++CONFIG_PREALLOC_WDOGS=50
++CONFIG_PREALLOC_TIMERS=50
++
++#
++# Stack and heap information
++#
++CONFIG_IDLETHREAD_STACKSIZE=6000
++CONFIG_USERMAIN_STACKSIZE=4096
++CONFIG_PTHREAD_STACK_MIN=512
++CONFIG_PTHREAD_STACK_DEFAULT=2048
++
++#
++# Device Drivers
++#
++# CONFIG_DISABLE_POLL is not set
++CONFIG_DEV_NULL=y
++# CONFIG_DEV_ZERO is not set
++# CONFIG_LOOP is not set
++# CONFIG_RAMDISK is not set
++CONFIG_CAN=n
++# CONFIG_PWM is not set
++CONFIG_I2C=y
++# CONFIG_I2C_SLAVE is not set
++CONFIG_I2C_TRANSFER=y
++# CONFIG_I2C_WRITEREAD is not set
++# CONFIG_I2_POLLED is not set
++# CONFIG_I2C_TRACE is not set
++CONFIG_ARCH_HAVE_I2CRESET=y
++CONFIG_I2C_RESET=y
++CONFIG_SPI=y
++# CONFIG_SPI_OWNBUS is not set
++CONFIG_SPI_EXCHANGE=y
++# CONFIG_SPI_CMDDATA is not set
++# CONFIG_RTC is not set
++CONFIG_WATCHDOG=y
++# CONFIG_ANALOG is not set
++# CONFIG_AUDIO_DEVICES is not set
++# CONFIG_BCH is not set
++# CONFIG_INPUT is not set
++# CONFIG_LCD is not set
++# CONFIG_MMCSD is not set
++CONFIG_MTD=y
++
++#
++# MTD Configuration
++#
++CONFIG_MTD_PARTITION=y
++CONFIG_MTD_BYTE_WRITE=y
++
++#
++# MTD Device Drivers
++#
++# CONFIG_RAMMTD is not set
++# CONFIG_MTD_AT24XX is not set
++# CONFIG_MTD_AT45DB is not set
++# CONFIG_MTD_M25P is not set
++# CONFIG_MTD_SMART is not set
++CONFIG_MTD_RAMTRON=y
++# CONFIG_MTD_SST25 is not set
++# CONFIG_MTD_SST39FV is not set
++# CONFIG_MTD_W25 is not set
++CONFIG_PIPES=y
++# CONFIG_PM is not set
++# CONFIG_POWER is not set
++# CONFIG_SENSORS is not set
++CONFIG_SERIAL=y
++# CONFIG_DEV_LOWCONSOLE is not set
++CONFIG_SERIAL_REMOVABLE=y
++# CONFIG_16550_UART is not set
++CONFIG_ARCH_HAVE_USART2=y
++CONFIG_MCU_SERIAL=y
++CONFIG_STANDARD_SERIAL=y
++CONFIG_SERIAL_NPOLLWAITERS=2
++CONFIG_USART2_SERIAL_CONSOLE=y
++# CONFIG_NO_SERIAL_CONSOLE is not set
++CONFIG_ARCH_HAVE_USART1=y
++CONFIG_ARCH_HAVE_USART2=y
++CONFIG_ARCH_HAVE_USART3=y
++CONFIG_ARCH_HAVE_UART4=y
++CONFIG_ARCH_HAVE_USART6=n
++CONFIG_ARCH_HAVE_UART7=y
++CONFIG_ARCH_HAVE_UART8=y
++
++
++#
++# USART2 Configuration
++#
++CONFIG_USART2_RXBUFSIZE=512
++CONFIG_USART2_TXBUFSIZE=512
++CONFIG_USART2_BAUD=57600
++CONFIG_USART2_BITS=8
++CONFIG_USART2_PARITY=0
++CONFIG_USART2_2STOP=0
++# CONFIG_USART2_IFLOWCONTROL is not set
++# CONFIG_USART2_OFLOWCONTROL is not set
++
++#
++# USART3 Configuration
++#
++CONFIG_USART3_RXBUFSIZE=512
++CONFIG_USART3_TXBUFSIZE=512
++CONFIG_USART3_BAUD=57600
++CONFIG_USART3_BITS=8
++CONFIG_USART3_PARITY=0
++CONFIG_USART3_2STOP=0
++CONFIG_USART3_IFLOWCONTROL=y
++CONFIG_USART3_OFLOWCONTROL=y
++
++#
++# UART4 Configuration
++#
++CONFIG_UART4_RXBUFSIZE=512
++CONFIG_UART4_TXBUFSIZE=512
++CONFIG_UART4_BAUD=57600
++CONFIG_UART4_BITS=8
++CONFIG_UART4_PARITY=0
++CONFIG_UART4_2STOP=0
++# CONFIG_UART4_IFLOWCONTROL is not set
++# CONFIG_UART4_OFLOWCONTROL is not set
++
++#
++# USART6 Configuration
++#
++CONFIG_USART6_RXBUFSIZE=512
++CONFIG_USART6_TXBUFSIZE=512
++CONFIG_USART6_BAUD=57600
++CONFIG_USART6_BITS=8
++CONFIG_USART6_PARITY=0
++CONFIG_USART6_2STOP=0
++# CONFIG_USART6_IFLOWCONTROL is not set
++# CONFIG_USART6_OFLOWCONTROL is not set
++
++#
++# UART7 Configuration
++#
++CONFIG_UART7_RXBUFSIZE=512
++CONFIG_UART7_TXBUFSIZE=512
++CONFIG_UART7_BAUD=57600
++CONFIG_UART7_BITS=8
++CONFIG_UART7_PARITY=0
++CONFIG_UART7_2STOP=0
++# CONFIG_UART7_IFLOWCONTROL is not set
++# CONFIG_UART7_OFLOWCONTROL is not set
++
++#
++# UART8 Configuration
++#
++CONFIG_UART8_RXBUFSIZE=512
++CONFIG_UART8_TXBUFSIZE=512
++CONFIG_UART8_BAUD=57600
++CONFIG_UART8_BITS=8
++CONFIG_UART8_PARITY=0
++CONFIG_UART8_2STOP=0
++# CONFIG_UART8_IFLOWCONTROL is not set
++# CONFIG_UART8_OFLOWCONTROL is not set
++# CONFIG_SERIAL_IFLOWCONTROL is not set
++# CONFIG_SERIAL_OFLOWCONTROL is not set
++CONFIG_USBDEV=y
++
++#
++# USB Device Controller Driver Options
++#
++# CONFIG_USBDEV_ISOCHRONOUS is not set
++# CONFIG_USBDEV_DUALSPEED is not set
++# CONFIG_USBDEV_SELFPOWERED is not set
++CONFIG_USBDEV_BUSPOWERED=y
++CONFIG_USBDEV_MAXPOWER=500
++# CONFIG_USBDEV_DMA is not set
++# CONFIG_USBDEV_TRACE is not set
++
++#
++# USB Device Class Driver Options
++#
++# CONFIG_USBDEV_COMPOSITE is not set
++# CONFIG_PL2303 is not set
++CONFIG_CDCACM=y
++# CONFIG_CDCACM_CONSOLE is not set
++CONFIG_CDCACM_EP0MAXPACKET=64
++CONFIG_CDCACM_EPINTIN=1
++CONFIG_CDCACM_EPINTIN_FSSIZE=64
++CONFIG_CDCACM_EPINTIN_HSSIZE=64
++CONFIG_CDCACM_EPBULKOUT=3
++CONFIG_CDCACM_EPBULKOUT_FSSIZE=64
++CONFIG_CDCACM_EPBULKOUT_HSSIZE=512
++CONFIG_CDCACM_EPBULKIN=2
++CONFIG_CDCACM_EPBULKIN_FSSIZE=64
++CONFIG_CDCACM_EPBULKIN_HSSIZE=512
++CONFIG_CDCACM_NWRREQS=4
++CONFIG_CDCACM_NRDREQS=4
++CONFIG_CDCACM_BULKIN_REQLEN=96
++CONFIG_CDCACM_RXBUFSIZE=512
++CONFIG_CDCACM_TXBUFSIZE=2048
++CONFIG_CDCACM_VENDORID=0x26ac
++CONFIG_CDCACM_PRODUCTID=0x0011
++CONFIG_CDCACM_VENDORSTR="3D Robotics"
++CONFIG_CDCACM_PRODUCTSTR="PX4 FMU v2.x"
++# CONFIG_USBMSC is not set
++# CONFIG_USBHOST is not set
++# CONFIG_WIRELESS is not set
++
++#
++# System Logging Device Options
++#
++
++#
++# System Logging
++#
++# CONFIG_RAMLOG is not set
++
++#
++# Networking Support
++#
++# CONFIG_NET is not set
++
++#
++# File Systems
++#
++
++#
++# File system configuration
++#
++# CONFIG_DISABLE_MOUNTPOINT is not set
++# CONFIG_FS_RAMMAP is not set
++CONFIG_FS_FAT=y
++# CONFIG_FAT_LCNAMES is not set
++# CONFIG_FAT_LFN is not set
++# CONFIG_FS_FATTIME is not set
++# CONFIG_FAT_DMAMEMORY is not set
++CONFIG_FS_NXFFS=y
++CONFIG_NXFFS_PREALLOCATED=y
++CONFIG_NXFFS_ERASEDSTATE=0xff
++CONFIG_NXFFS_PACKTHRESHOLD=32
++CONFIG_NXFFS_MAXNAMLEN=32
++CONFIG_NXFFS_TAILTHRESHOLD=2048
++CONFIG_FS_ROMFS=y
++# CONFIG_FS_SMARTFS is not set
++CONFIG_FS_BINFS=y
++
++#
++# System Logging
++#
++# CONFIG_SYSLOG_ENABLE is not set
++# CONFIG_SYSLOG is not set
++
++#
++# Graphics Support
++#
++# CONFIG_NX is not set
++
++#
++# Memory Management
++#
++# CONFIG_MM_MULTIHEAP is not set
++# CONFIG_MM_SMALL is not set
++CONFIG_MM_REGIONS=2
++CONFIG_GRAN=y
++# CONFIG_GRAN_SINGLE is not set
++# CONFIG_GRAN_INTR is not set
++
++#
++# Audio Support
++#
++# CONFIG_AUDIO is not set
++
++#
++# Binary Formats
++#
++# CONFIG_BINFMT_DISABLE is not set
++# CONFIG_BINFMT_EXEPATH is not set
++# CONFIG_NXFLAT is not set
++# CONFIG_ELF is not set
++CONFIG_BUILTIN=y
++# CONFIG_PIC is not set
++# CONFIG_SYMTAB_ORDEREDBYNAME is not set
++
++#
++# Library Routines
++#
++
++#
++# Standard C Library Options
++#
++CONFIG_STDIO_BUFFER_SIZE=32
++CONFIG_STDIO_LINEBUFFER=y
++CONFIG_NUNGET_CHARS=2
++CONFIG_LIB_HOMEDIR="/"
++# CONFIG_NOPRINTF_FIELDWIDTH is not set
++CONFIG_LIBC_FLOATINGPOINT=y
++CONFIG_LIB_RAND_ORDER=1
++# CONFIG_EOL_IS_CR is not set
++# CONFIG_EOL_IS_LF is not set
++# CONFIG_EOL_IS_BOTH_CRLF is not set
++CONFIG_EOL_IS_EITHER_CRLF=y
++# CONFIG_LIBC_EXECFUNCS is not set
++CONFIG_POSIX_SPAWN_PROXY_STACKSIZE=1024
++CONFIG_TASK_SPAWN_DEFAULT_STACKSIZE=2048
++CONFIG_LIBC_STRERROR=y
++# CONFIG_LIBC_STRERROR_SHORT is not set
++# CONFIG_LIBC_PERROR_STDOUT is not set
++CONFIG_ARCH_LOWPUTC=y
++CONFIG_LIB_SENDFILE_BUFSIZE=512
++# CONFIG_ARCH_ROMGETC is not set
++CONFIG_ARCH_OPTIMIZED_FUNCTIONS=y
++CONFIG_ARCH_MEMCPY=y
++# CONFIG_ARCH_MEMCMP is not set
++# CONFIG_ARCH_MEMMOVE is not set
++# CONFIG_ARCH_MEMSET is not set
++# CONFIG_MEMSET_OPTSPEED is not set
++# CONFIG_ARCH_STRCHR is not set
++# CONFIG_ARCH_STRCMP is not set
++# CONFIG_ARCH_STRCPY is not set
++# CONFIG_ARCH_STRNCPY is not set
++# CONFIG_ARCH_STRLEN is not set
++# CONFIG_ARCH_STRNLEN is not set
++# CONFIG_ARCH_BZERO is not set
++
++#
++# Non-standard Library Support
++#
++CONFIG_SCHED_WORKQUEUE=y
++CONFIG_SCHED_HPWORK=y
++CONFIG_SCHED_WORKPRIORITY=192
++CONFIG_SCHED_WORKPERIOD=5000
++CONFIG_SCHED_WORKSTACKSIZE=4000
++CONFIG_SCHED_LPWORK=y
++CONFIG_SCHED_LPWORKPRIORITY=50
++CONFIG_SCHED_LPWORKPERIOD=50000
++CONFIG_SCHED_LPWORKSTACKSIZE=4000
++# CONFIG_LIB_KBDCODEC is not set
++# CONFIG_LIB_SLCDCODEC is not set
++
++#
++# Basic CXX Support
++#
++CONFIG_C99_BOOL8=y
++CONFIG_HAVE_CXX=y
++CONFIG_HAVE_CXXINITIALIZE=y
++# CONFIG_CXX_NEWLONG is not set
++
++#
++# uClibc++ Standard C++ Library
++#
++# CONFIG_UCLIBCXX is not set
++
++#
++# Application Configuration
++#
++
++#
++# Built-In Applications
++#
++CONFIG_BUILTIN_PROXY_STACKSIZE=1024
++
++#
++# Examples
++#
++# CONFIG_EXAMPLES_BUTTONS is not set
++# CONFIG_EXAMPLES_CAN is not set
++CONFIG_EXAMPLES_CDCACM=y
++# CONFIG_EXAMPLES_COMPOSITE is not set
++# CONFIG_EXAMPLES_CXXTEST is not set
++# CONFIG_EXAMPLES_DHCPD is not set
++# CONFIG_EXAMPLES_ELF is not set
++# CONFIG_EXAMPLES_FTPC is not set
++# CONFIG_EXAMPLES_FTPD is not set
++# CONFIG_EXAMPLES_HELLO is not set
++# CONFIG_EXAMPLES_HELLOXX is not set
++# CONFIG_EXAMPLES_JSON is not set
++# CONFIG_EXAMPLES_HIDKBD is not set
++# CONFIG_EXAMPLES_KEYPADTEST is not set
++# CONFIG_EXAMPLES_IGMP is not set
++# CONFIG_EXAMPLES_LCDRW is not set
++# CONFIG_EXAMPLES_MM is not set
++# CONFIG_EXAMPLES_MODBUS is not set
++CONFIG_EXAMPLES_MOUNT=y
++# CONFIG_EXAMPLES_NRF24L01TERM is not set
++CONFIG_EXAMPLES_NSH=y
++# CONFIG_EXAMPLES_NULL is not set
++# CONFIG_EXAMPLES_NX is not set
++# CONFIG_EXAMPLES_NXCONSOLE is not set
++# CONFIG_EXAMPLES_NXFFS is not set
++# CONFIG_EXAMPLES_NXFLAT is not set
++# CONFIG_EXAMPLES_NXHELLO is not set
++# CONFIG_EXAMPLES_NXIMAGE is not set
++# CONFIG_EXAMPLES_NXLINES is not set
++# CONFIG_EXAMPLES_NXTEXT is not set
++# CONFIG_EXAMPLES_OSTEST is not set
++# CONFIG_EXAMPLES_PASHELLO is not set
++# CONFIG_EXAMPLES_PIPE is not set
++# CONFIG_EXAMPLES_POSIXSPAWN is not set
++# CONFIG_EXAMPLES_QENCODER is not set
++# CONFIG_EXAMPLES_RGMP is not set
++# CONFIG_EXAMPLES_ROMFS is not set
++# CONFIG_EXAMPLES_SENDMAIL is not set
++# CONFIG_EXAMPLES_SERLOOP is not set
++# CONFIG_EXAMPLES_SLCD is not set
++# CONFIG_EXAMPLES_SMART_TEST is not set
++# CONFIG_EXAMPLES_SMART is not set
++# CONFIG_EXAMPLES_TCPECHO is not set
++# CONFIG_EXAMPLES_TELNETD is not set
++# CONFIG_EXAMPLES_THTTPD is not set
++# CONFIG_EXAMPLES_TIFF is not set
++# CONFIG_EXAMPLES_TOUCHSCREEN is not set
++# CONFIG_EXAMPLES_UDP is not set
++# CONFIG_EXAMPLES_UIP is not set
++# CONFIG_EXAMPLES_USBSERIAL is not set
++# CONFIG_EXAMPLES_USBMSC is not set
++# CONFIG_EXAMPLES_USBTERM is not set
++# CONFIG_EXAMPLES_WATCHDOG is not set
++
++#
++# Graphics Support
++#
++# CONFIG_TIFF is not set
++
++#
++# Interpreters
++#
++# CONFIG_INTERPRETERS_FICL is not set
++# CONFIG_INTERPRETERS_PCODE is not set
++
++#
++# Network Utilities
++#
++
++#
++# Networking Utilities
++#
++# CONFIG_NETUTILS_CODECS is not set
++# CONFIG_NETUTILS_DHCPC is not set
++# CONFIG_NETUTILS_DHCPD is not set
++# CONFIG_NETUTILS_FTPC is not set
++# CONFIG_NETUTILS_FTPD is not set
++# CONFIG_NETUTILS_JSON is not set
++# CONFIG_NETUTILS_RESOLV is not set
++# CONFIG_NETUTILS_SMTP is not set
++# CONFIG_NETUTILS_TELNETD is not set
++# CONFIG_NETUTILS_TFTPC is not set
++# CONFIG_NETUTILS_THTTPD is not set
++# CONFIG_NETUTILS_UIPLIB is not set
++# CONFIG_NETUTILS_WEBCLIENT is not set
++
++#
++# FreeModBus
++#
++# CONFIG_MODBUS is not set
++
++#
++# NSH Library
++#
++CONFIG_NSH_LIBRARY=y
++CONFIG_NSH_BUILTIN_APPS=y
++
++#
++# Disable Individual commands
++#
++# CONFIG_NSH_DISABLE_CAT is not set
++# CONFIG_NSH_DISABLE_CD is not set
++# CONFIG_NSH_DISABLE_CP is not set
++# CONFIG_NSH_DISABLE_DD is not set
++# CONFIG_NSH_DISABLE_ECHO is not set
++# CONFIG_NSH_DISABLE_EXEC is not set
++# CONFIG_NSH_DISABLE_EXIT is not set
++# CONFIG_NSH_DISABLE_FREE is not set
++# CONFIG_NSH_DISABLE_GET is not set
++# CONFIG_NSH_DISABLE_HELP is not set
++# CONFIG_NSH_DISABLE_HEXDUMP is not set
++# CONFIG_NSH_DISABLE_IFCONFIG is not set
++# CONFIG_NSH_DISABLE_KILL is not set
++# CONFIG_NSH_DISABLE_LOSETUP is not set
++# CONFIG_NSH_DISABLE_LS is not set
++# CONFIG_NSH_DISABLE_MB is not set
++# CONFIG_NSH_DISABLE_MKDIR is not set
++# CONFIG_NSH_DISABLE_MKFATFS is not set
++# CONFIG_NSH_DISABLE_MKFIFO is not set
++# CONFIG_NSH_DISABLE_MKRD is not set
++# CONFIG_NSH_DISABLE_MH is not set
++# CONFIG_NSH_DISABLE_MOUNT is not set
++# CONFIG_NSH_DISABLE_MW is not set
++# CONFIG_NSH_DISABLE_NSFMOUNT is not set
++# CONFIG_NSH_DISABLE_PS is not set
++# CONFIG_NSH_DISABLE_PING is not set
++# CONFIG_NSH_DISABLE_PUT is not set
++# CONFIG_NSH_DISABLE_PWD is not set
++# CONFIG_NSH_DISABLE_RM is not set
++# CONFIG_NSH_DISABLE_RMDIR is not set
++# CONFIG_NSH_DISABLE_SET is not set
++# CONFIG_NSH_DISABLE_SH is not set
++# CONFIG_NSH_DISABLE_SLEEP is not set
++# CONFIG_NSH_DISABLE_TEST is not set
++# CONFIG_NSH_DISABLE_UMOUNT is not set
++# CONFIG_NSH_DISABLE_UNSET is not set
++# CONFIG_NSH_DISABLE_USLEEP is not set
++# CONFIG_NSH_DISABLE_WGET is not set
++# CONFIG_NSH_DISABLE_XD is not set
++
++#
++# Configure Command Options
++#
++# CONFIG_NSH_CMDOPT_DF_H is not set
++CONFIG_NSH_CODECS_BUFSIZE=128
++CONFIG_NSH_FILEIOSIZE=512
++CONFIG_NSH_STRERROR=y
++CONFIG_NSH_LINELEN=128
++CONFIG_NSH_MAXARGUMENTS=12
++CONFIG_NSH_NESTDEPTH=8
++# CONFIG_NSH_DISABLESCRIPT is not set
++# CONFIG_NSH_DISABLEBG is not set
++CONFIG_NSH_ROMFSETC=y
++# CONFIG_NSH_ROMFSRC is not set
++CONFIG_NSH_ROMFSMOUNTPT="/etc"
++CONFIG_NSH_INITSCRIPT="init.d/rcS"
++CONFIG_NSH_ROMFSDEVNO=0
++CONFIG_NSH_ROMFSSECTSIZE=128
++CONFIG_NSH_ARCHROMFS=y
++CONFIG_NSH_FATDEVNO=0
++CONFIG_NSH_FATSECTSIZE=512
++CONFIG_NSH_FATNSECTORS=1024
++CONFIG_NSH_FATMOUNTPT="/tmp"
++CONFIG_NSH_CONSOLE=y
++# CONFIG_NSH_USBCONSOLE is not set
++
++#
++# USB Trace Support
++#
++# CONFIG_NSH_CONDEV is not set
++CONFIG_NSH_ARCHINIT=y
++
++#
++# NxWidgets/NxWM
++#
++
++#
++# System NSH Add-Ons
++#
++
++#
++# Custom Free Memory Command
++#
++# CONFIG_SYSTEM_FREE is not set
++
++#
++# I2C tool
++#
++# CONFIG_SYSTEM_I2CTOOL is not set
++
++#
++# FLASH Program Installation
++#
++# CONFIG_SYSTEM_INSTALL is not set
++
++#
++# FLASH Erase-all Command
++#
++
++#
++# readline()
++#
++CONFIG_SYSTEM_READLINE=y
++CONFIG_READLINE_ECHO=y
++
++#
++# Power Off
++#
++# CONFIG_SYSTEM_POWEROFF is not set
++
++#
++# RAMTRON
++#
++# CONFIG_SYSTEM_RAMTRON is not set
++
++#
++# SD Card
++#
++# CONFIG_SYSTEM_SDCARD is not set
++
++#
++# Sysinfo
++#
++CONFIG_SYSTEM_SYSINFO=y
++
++CONFIG_MMCSD=y
++CONFIG_MMCSD_NSLOTS=1
++CONFIG_MMCSD_MULTIBLOCK_DISABLE=y
++CONFIG_MMCSD_SDIO=y
++CONFIG_SDIO_DMA=y
++CONFIG_SDIO_DMAPRIO=0x00010000
++CONFIG_STM32_SDIO=y
++CONFIG_SDIO_PRI=128
++
++CONFIG_NSH_MMCSDSLOTNO=0
++
++
++#
++# USB Monitor
++#
+diff --git a/nuttx-configs/px4-stm32f4discovery/nsh/setenv.sh b/nuttx-configs/px4-stm32f4discovery/nsh/setenv.sh
+new file mode 100755
+index 0000000..2655209
+--- /dev/null
++++ b/nuttx-configs/px4-stm32f4discovery/nsh/setenv.sh
+@@ -0,0 +1,67 @@
++#!/bin/bash
++# configs/stm3240g-eval/nsh/setenv.sh
++#
++#   Copyright (C) 2011 Gregory Nutt. All rights reserved.
++#   Author: Gregory Nutt <gnutt@nuttx.org>
++#
++# Redistribution and use in source and binary forms, with or without
++# modification, are permitted provided that the following conditions
++# are met:
++#
++# 1. Redistributions of source code must retain the above copyright
++#    notice, this list of conditions and the following disclaimer.
++# 2. Redistributions in binary form must reproduce the above copyright
++#    notice, this list of conditions and the following disclaimer in
++#    the documentation and/or other materials provided with the
++#    distribution.
++# 3. Neither the name NuttX nor the names of its contributors may be
++#    used to endorse or promote products derived from this software
++#    without specific prior written permission.
++#
++# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
++# "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
++# LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
++# FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
++# COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
++# INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
++# BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS
++# OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED
++# AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
++# LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
++# ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
++# POSSIBILITY OF SUCH DAMAGE.
++#
++
++if [ "$_" = "$0" ] ; then
++  echo "You must source this script, not run it!" 1>&2
++  exit 1
++fi
++
++WD=`pwd`
++if [ ! -x "setenv.sh" ]; then
++  echo "This script must be executed from the top-level NuttX build directory"
++  exit 1
++fi
++
++if [ -z "${PATH_ORIG}" ]; then
++  export PATH_ORIG="${PATH}"
++fi
++
++# This the Cygwin path to the location where I installed the RIDE
++# toolchain under windows.  You will also have to edit this if you install
++# the RIDE toolchain in any other location
++#export TOOLCHAIN_BIN="/cygdrive/c/Program Files (x86)/Raisonance/Ride/arm-gcc/bin"
++
++# This the Cygwin path to the location where I installed the CodeSourcery
++# toolchain under windows.  You will also have to edit this if you install
++# the CodeSourcery toolchain in any other location
++export TOOLCHAIN_BIN="/cygdrive/c/Program Files (x86)/CodeSourcery/Sourcery G++ Lite/bin"
++
++# This the Cygwin path to the location where I build the buildroot
++# toolchain.
++#export TOOLCHAIN_BIN="${WD}/../misc/buildroot/build_arm_nofpu/staging_dir/bin"
++
++# Add the path to the toolchain to the PATH varialble
++export PATH="${TOOLCHAIN_BIN}:/sbin:/usr/sbin:${PATH_ORIG}"
++
++echo "PATH : ${PATH}"
+diff --git a/nuttx-configs/px4-stm32f4discovery/scripts/ld.script b/nuttx-configs/px4-stm32f4discovery/scripts/ld.script
+new file mode 100644
+index 0000000..f39a95c
+--- /dev/null
++++ b/nuttx-configs/px4-stm32f4discovery/scripts/ld.script
+@@ -0,0 +1,149 @@
++/****************************************************************************
++ * configs/px4fmu-v1/scripts/ld.script
++ *
++ *   Copyright (C) 2011 Gregory Nutt. All rights reserved.
++ *   Author: Gregory Nutt <gnutt@nuttx.org>
++ *
++ * Redistribution and use in source and binary forms, with or without
++ * modification, are permitted provided that the following conditions
++ * are met:
++ *
++ * 1. Redistributions of source code must retain the above copyright
++ *    notice, this list of conditions and the following disclaimer.
++ * 2. Redistributions in binary form must reproduce the above copyright
++ *    notice, this list of conditions and the following disclaimer in
++ *    the documentation and/or other materials provided with the
++ *    distribution.
++ * 3. Neither the name NuttX nor the names of its contributors may be
++ *    used to endorse or promote products derived from this software
++ *    without specific prior written permission.
++ *
++ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
++ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
++ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
++ * FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
++ * COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
++ * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
++ * BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS
++ * OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED
++ * AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
++ * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
++ * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
++ * POSSIBILITY OF SUCH DAMAGE.
++ *
++ ****************************************************************************/
++
++/* The STM32F40VGG has 1024Kb of FLASH beginning at address 0x0800:0000 and
++ * 192Kb of SRAM. SRAM is split up into three blocks:
++ *
++ * 1) 112Kb of SRAM beginning at address 0x2000:0000
++ * 2)  16Kb of SRAM beginning at address 0x2001:c000
++ * 3)  64Kb of CCM SRAM beginning at address 0x1000:0000
++ *
++ * When booting from FLASH, FLASH memory is aliased to address 0x0000:0000
++ * where the code expects to begin execution by jumping to the entry point in
++ * the 0x0800:0000 address range.
++ *
++ * The first 0x4000 of flash is reserved for the bootloader.
++ */
++
++MEMORY
++{
++    flash (rx)   : ORIGIN = 0x08004000, LENGTH = 1008K
++    sram (rwx)   : ORIGIN = 0x20000000, LENGTH = 128K
++    ccsram (rwx) : ORIGIN = 0x10000000, LENGTH = 64K
++}
++
++OUTPUT_ARCH(arm)
++
++ENTRY(__start)		/* treat __start as the anchor for dead code stripping */
++EXTERN(_vectors)	/* force the vectors to be included in the output */
++
++/* 
++ * Ensure that abort() is present in the final object.  The exception handling
++ * code pulled in by libgcc.a requires it (and that code cannot be easily avoided).
++ */
++EXTERN(abort)
++
++SECTIONS
++{
++	.text : {
++		_stext = ABSOLUTE(.);
++		*(.vectors)
++		*(.text .text.*)        
++		*(.fixup)
++		*(.gnu.warning)
++		*(.rodata .rodata.*)        
++		*(.gnu.linkonce.t.*)
++		*(.got)
++		*(.gcc_except_table)
++		*(.gnu.linkonce.r.*)
++		_etext = ABSOLUTE(.);
++
++		/* 
++		 * This is a hack to make the newlib libm __errno() call
++		 * use the NuttX get_errno_ptr() function.
++		 */
++		__errno = get_errno_ptr;
++	} > flash
++
++	/*
++	 * Init functions (static constructors and the like)
++	 */
++        .init_section : {
++                _sinit = ABSOLUTE(.);
++                KEEP(*(.init_array .init_array.*))
++                _einit = ABSOLUTE(.);
++        } > flash
++
++	/*
++	 * Construction data for parameters.
++	 */
++	__param ALIGN(4): {
++		__param_start = ABSOLUTE(.);
++		KEEP(*(__param*))
++		__param_end = ABSOLUTE(.);
++	} > flash
++
++	.ARM.extab : {
++		*(.ARM.extab*)
++	} > flash
++
++	__exidx_start = ABSOLUTE(.);
++	.ARM.exidx : {
++		*(.ARM.exidx*)
++	} > flash
++	__exidx_end = ABSOLUTE(.);
++
++	_eronly = ABSOLUTE(.);
++
++	.data : {
++		_sdata = ABSOLUTE(.);
++		*(.data .data.*)
++		*(.gnu.linkonce.d.*)
++		CONSTRUCTORS
++		_edata = ABSOLUTE(.);
++	} > sram AT > flash
++
++	.bss : {
++		_sbss = ABSOLUTE(.);
++		*(.bss .bss.*)
++		*(.gnu.linkonce.b.*)
++		*(COMMON)
++		_ebss = ABSOLUTE(.);
++	} > sram
++
++	/* Stabs debugging sections. */
++	.stab 0 : { *(.stab) }
++	.stabstr 0 : { *(.stabstr) }
++	.stab.excl 0 : { *(.stab.excl) }
++	.stab.exclstr 0 : { *(.stab.exclstr) }
++	.stab.index 0 : { *(.stab.index) }
++	.stab.indexstr 0 : { *(.stab.indexstr) }
++	.comment 0 : { *(.comment) }
++	.debug_abbrev 0 : { *(.debug_abbrev) }
++	.debug_info 0 : { *(.debug_info) }
++	.debug_line 0 : { *(.debug_line) }
++	.debug_pubnames 0 : { *(.debug_pubnames) }
++	.debug_aranges 0 : { *(.debug_aranges) }
++}
+diff --git a/nuttx-configs/px4-stm32f4discovery/src/Makefile b/nuttx-configs/px4-stm32f4discovery/src/Makefile
+new file mode 100644
+index 0000000..d4276f7
+--- /dev/null
++++ b/nuttx-configs/px4-stm32f4discovery/src/Makefile
+@@ -0,0 +1,84 @@
++############################################################################
++# configs/px4fmu/src/Makefile
++#
++#   Copyright (C) 2011 Gregory Nutt. All rights reserved.
++#   Author: Gregory Nutt <gnutt@nuttx.org>
++#
++# Redistribution and use in source and binary forms, with or without
++# modification, are permitted provided that the following conditions
++# are met:
++#
++# 1. Redistributions of source code must retain the above copyright
++#    notice, this list of conditions and the following disclaimer.
++# 2. Redistributions in binary form must reproduce the above copyright
++#    notice, this list of conditions and the following disclaimer in
++#    the documentation and/or other materials provided with the
++#    distribution.
++# 3. Neither the name NuttX nor the names of its contributors may be
++#    used to endorse or promote products derived from this software
++#    without specific prior written permission.
++#
++# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
++# "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
++# LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
++# FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
++# COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
++# INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
++# BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS
++# OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED
++# AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
++# LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
++# ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
++# POSSIBILITY OF SUCH DAMAGE.
++#
++############################################################################
++
++-include $(TOPDIR)/Make.defs
++
++CFLAGS		+= -I$(TOPDIR)/sched
++
++ASRCS		= 
++AOBJS		= $(ASRCS:.S=$(OBJEXT))
++
++CSRCS		= empty.c
++COBJS		= $(CSRCS:.c=$(OBJEXT))
++
++SRCS		= $(ASRCS) $(CSRCS)
++OBJS		= $(AOBJS) $(COBJS)
++
++ARCH_SRCDIR	= $(TOPDIR)/arch/$(CONFIG_ARCH)/src
++ifeq ($(WINTOOL),y)
++  CFLAGS	+= -I "${shell cygpath -w $(ARCH_SRCDIR)/chip}" \
++  		   -I "${shell cygpath -w $(ARCH_SRCDIR)/common}" \
++  		   -I "${shell cygpath -w $(ARCH_SRCDIR)/armv7-m}"
++else
++  CFLAGS	+= -I$(ARCH_SRCDIR)/chip -I$(ARCH_SRCDIR)/common -I$(ARCH_SRCDIR)/armv7-m
++endif
++
++all: libboard$(LIBEXT)
++
++$(AOBJS): %$(OBJEXT): %.S
++	$(call ASSEMBLE, $<, $@)
++
++$(COBJS) $(LINKOBJS): %$(OBJEXT): %.c
++	$(call COMPILE, $<, $@)
++
++libboard$(LIBEXT): $(OBJS)
++	$(call ARCHIVE, $@, $(OBJS))
++
++.depend: Makefile $(SRCS)
++	$(Q) $(MKDEP) $(CC) -- $(CFLAGS) -- $(SRCS) >Make.dep
++	$(Q) touch $@
++
++depend: .depend
++
++clean:
++	$(call DELFILE, libboard$(LIBEXT))
++	$(call CLEAN)
++
++distclean: clean
++	$(call DELFILE, Make.dep)
++	$(call DELFILE, .depend)
++
++-include Make.dep
++
+diff --git a/nuttx-configs/px4-stm32f4discovery/src/empty.c b/nuttx-configs/px4-stm32f4discovery/src/empty.c
+new file mode 100644
+index 0000000..ace9008
+--- /dev/null
++++ b/nuttx-configs/px4-stm32f4discovery/src/empty.c
+@@ -0,0 +1,4 @@
++/*
++ * There are no source files here, but libboard.a can't be empty, so 
++ * we have this empty source file to keep it company.
++ */
+diff --git a/src/drivers/boards/px4-stm32f4discovery/board_config.h b/src/drivers/boards/px4-stm32f4discovery/board_config.h
+new file mode 100644
+index 0000000..3d33531
+--- /dev/null
++++ b/src/drivers/boards/px4-stm32f4discovery/board_config.h
+@@ -0,0 +1,253 @@
++/****************************************************************************
++ *
++ *   Copyright (c) 2013, 2014 PX4 Development Team. All rights reserved.
++ *
++ * Redistribution and use in source and binary forms, with or without
++ * modification, are permitted provided that the following conditions
++ * are met:
++ *
++ * 1. Redistributions of source code must retain the above copyright
++ *    notice, this list of conditions and the following disclaimer.
++ * 2. Redistributions in binary form must reproduce the above copyright
++ *    notice, this list of conditions and the following disclaimer in
++ *    the documentation and/or other materials provided with the
++ *    distribution.
++ * 3. Neither the name PX4 nor the names of its contributors may be
++ *    used to endorse or promote products derived from this software
++ *    without specific prior written permission.
++ *
++ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
++ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
++ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
++ * FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
++ * COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
++ * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
++ * BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS
++ * OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED
++ * AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
++ * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
++ * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
++ * POSSIBILITY OF SUCH DAMAGE.
++ *
++ ****************************************************************************/
++
++/**
++ * @file board_config.h
++ *
++ * PX4FMUv2 internal definitions
++ */
++
++#pragma once
++
++/****************************************************************************************************
++ * Included Files
++ ****************************************************************************************************/
++
++#include <nuttx/config.h>
++#include <nuttx/compiler.h>
++#include <stdint.h>
++
++__BEGIN_DECLS
++
++/* these headers are not C++ safe */
++#include <stm32.h>
++#include <arch/board/board.h>
++
++#define UDID_START		0x1FFF7A10
++ 
++/****************************************************************************************************
++ * Definitions
++ ****************************************************************************************************/
++/* Configuration ************************************************************************************/
++
++/* PX4FMU GPIOs ***********************************************************************************/
++/* LEDs */
++/* LEDs */
++/* External interrupts */
++#define GPIO_EXTI_GYRO_DRDY	(GPIO_INPUT|GPIO_FLOAT|GPIO_EXTI|GPIO_PORTB|GPIO_PIN0)
++#define GPIO_EXTI_MAG_DRDY	(GPIO_INPUT|GPIO_FLOAT|GPIO_EXTI|GPIO_PORTB|GPIO_PIN1)
++#define GPIO_EXTI_ACCEL_DRDY	(GPIO_INPUT|GPIO_FLOAT|GPIO_EXTI|GPIO_PORTB|GPIO_PIN4)
++#define GPIO_EXTI_MPU_DRDY	(GPIO_INPUT|GPIO_FLOAT|GPIO_EXTI|GPIO_PORTD|GPIO_PIN15)
++
++/* Data ready pins off */
++#define GPIO_GYRO_DRDY_OFF	(GPIO_INPUT|GPIO_PULLDOWN|GPIO_SPEED_2MHz|GPIO_PORTB|GPIO_PIN0)
++#define GPIO_MAG_DRDY_OFF	(GPIO_INPUT|GPIO_PULLDOWN|GPIO_SPEED_2MHz|GPIO_PORTB|GPIO_PIN1)
++#define GPIO_ACCEL_DRDY_OFF	(GPIO_INPUT|GPIO_PULLDOWN|GPIO_SPEED_2MHz|GPIO_PORTB|GPIO_PIN4)
++#define GPIO_EXTI_MPU_DRDY_OFF	(GPIO_INPUT|GPIO_PULLDOWN|GPIO_EXTI|GPIO_PORTD|GPIO_PIN15)
++
++/* SPI1 off */
++#define GPIO_SPI1_SCK_OFF	(GPIO_INPUT|GPIO_PULLDOWN|GPIO_PORTA|GPIO_PIN5)
++#define GPIO_SPI1_MISO_OFF	(GPIO_INPUT|GPIO_PULLDOWN|GPIO_PORTA|GPIO_PIN6)
++#define GPIO_SPI1_MOSI_OFF	(GPIO_INPUT|GPIO_PULLDOWN|GPIO_PORTA|GPIO_PIN7)
++
++/* SPI1 chip selects off */
++#define GPIO_SPI_CS_GYRO_OFF		(GPIO_INPUT|GPIO_PULLDOWN|GPIO_SPEED_2MHz|GPIO_PORTC|GPIO_PIN13)
++#define GPIO_SPI_CS_ACCEL_MAG_OFF	(GPIO_INPUT|GPIO_PULLDOWN|GPIO_SPEED_2MHz|GPIO_PORTC|GPIO_PIN15)
++#define GPIO_SPI_CS_BARO_OFF		(GPIO_INPUT|GPIO_PULLDOWN|GPIO_SPEED_2MHz|GPIO_PORTD|GPIO_PIN7)
++#define GPIO_SPI_CS_MPU_OFF		(GPIO_INPUT|GPIO_PULLDOWN|GPIO_SPEED_2MHz|GPIO_PORTC|GPIO_PIN2)
++
++/* SPI chip selects */
++#define GPIO_SPI_CS_GYRO	(GPIO_OUTPUT|GPIO_PUSHPULL|GPIO_SPEED_50MHz|GPIO_OUTPUT_SET|GPIO_PORTC|GPIO_PIN14)
++#define GPIO_SPI_CS_ACCEL	(GPIO_OUTPUT|GPIO_PUSHPULL|GPIO_SPEED_50MHz|GPIO_OUTPUT_SET|GPIO_PORTC|GPIO_PIN15)
++#define GPIO_SPI_CS_SDCARD	(GPIO_OUTPUT|GPIO_PUSHPULL|GPIO_SPEED_50MHz|GPIO_OUTPUT_SET|GPIO_PORTA|GPIO_PIN4)
++/* SPI chip selects */
++#define GPIO_SPI_CS_ACCEL_MAG	(GPIO_OUTPUT|GPIO_PUSHPULL|GPIO_SPEED_2MHz|GPIO_OUTPUT_SET|GPIO_PORTC|GPIO_PIN15)
++#define GPIO_SPI_CS_BARO	(GPIO_OUTPUT|GPIO_PUSHPULL|GPIO_SPEED_2MHz|GPIO_OUTPUT_SET|GPIO_PORTD|GPIO_PIN7)
++#define GPIO_SPI_CS_FRAM	(GPIO_OUTPUT|GPIO_PUSHPULL|GPIO_SPEED_2MHz|GPIO_OUTPUT_SET|GPIO_PORTD|GPIO_PIN10)
++#define GPIO_SPI_CS_MPU		(GPIO_OUTPUT|GPIO_PUSHPULL|GPIO_SPEED_2MHz|GPIO_OUTPUT_SET|GPIO_PORTC|GPIO_PIN2)
++#define GPIO_SPI_CS_EXT0	(GPIO_OUTPUT|GPIO_PUSHPULL|GPIO_SPEED_50MHz|GPIO_OUTPUT_SET|GPIO_PORTE|GPIO_PIN4)
++#define GPIO_SPI_CS_EXT1	(GPIO_OUTPUT|GPIO_PUSHPULL|GPIO_SPEED_50MHz|GPIO_OUTPUT_SET|GPIO_PORTC|GPIO_PIN14)
++#define GPIO_SPI_CS_EXT2	(GPIO_OUTPUT|GPIO_PUSHPULL|GPIO_SPEED_50MHz|GPIO_OUTPUT_SET|GPIO_PORTC|GPIO_PIN15)
++#define GPIO_SPI_CS_EXT3	(GPIO_OUTPUT|GPIO_PUSHPULL|GPIO_SPEED_50MHz|GPIO_OUTPUT_SET|GPIO_PORTC|GPIO_PIN13)
++
++#define PX4_SPI_BUS_SENSORS	1
++#define PX4_SPI_BUS_EXT		4
++
++/* Use these in place of the spi_dev_e enumeration to select a specific SPI device on SPI1 */
++#define PX4_SPIDEV_GYRO		1
++#define PX4_SPIDEV_ACCEL_MAG	2
++#define PX4_SPIDEV_BARO		3
++#define PX4_SPIDEV_MPU		4
++
++/* External bus */
++#define PX4_SPIDEV_EXT0		1
++#define PX4_SPIDEV_EXT1		2
++#define PX4_SPIDEV_EXT2		3
++#define PX4_SPIDEV_EXT3		4
++
++/* FMUv3 SPI on external bus */
++#define PX4_SPIDEV_EXT_MPU		PX4_SPIDEV_EXT0
++#define PX4_SPIDEV_EXT_BARO		PX4_SPIDEV_EXT1
++#define PX4_SPIDEV_EXT_ACCEL_MAG	PX4_SPIDEV_EXT2
++#define PX4_SPIDEV_EXT_GYRO		PX4_SPIDEV_EXT3
++
++#define GPIO_LED1       (GPIO_OUTPUT|GPIO_PUSHPULL|GPIO_SPEED_50MHz|\
++                         GPIO_OUTPUT_CLEAR|GPIO_PORTD|GPIO_PIN12)
++#define GPIO_LED2       (GPIO_OUTPUT|GPIO_PUSHPULL|GPIO_SPEED_50MHz|\
++                         GPIO_OUTPUT_CLEAR|GPIO_PORTD|GPIO_PIN13)
++#define GPIO_LED3       (GPIO_OUTPUT|GPIO_PUSHPULL|GPIO_SPEED_50MHz|\
++                         GPIO_OUTPUT_CLEAR|GPIO_PORTD|GPIO_PIN14)
++#define GPIO_LED4       (GPIO_OUTPUT|GPIO_PUSHPULL|GPIO_SPEED_50MHz|\
++                         GPIO_OUTPUT_CLEAR|GPIO_PORTD|GPIO_PIN15)
++
++/* SPI chip selects */
++#define GPIO_SPI_CS_MEMS    (GPIO_OUTPUT|GPIO_PUSHPULL|GPIO_SPEED_50MHz|GPIO_OUTPUT_SET|GPIO_PORTE|GPIO_PIN3)
++
++
++/* External bus */
++#define PX4_SPIDEV_EXT0		1
++#define PX4_SPIDEV_EXT1		2
++#define PX4_SPIDEV_EXT2		3
++#define PX4_SPIDEV_EXT3		4
++
++/* FMUv3 SPI on external bus */
++#define PX4_SPIDEV_EXT_MPU		PX4_SPIDEV_EXT0
++#define PX4_SPIDEV_EXT_BARO		PX4_SPIDEV_EXT1
++#define PX4_SPIDEV_EXT_ACCEL_MAG	PX4_SPIDEV_EXT2
++#define PX4_SPIDEV_EXT_GYRO		PX4_SPIDEV_EXT3
++
++/* I2C busses */
++#define PX4_I2C_BUS_EXPANSION	1
++#define PX4_I2C_BUS_ONBOARD	2
++#define PX4_I2C_BUS_LED		PX4_I2C_BUS_ONBOARD
++
++/* Devices on the onboard bus.
++ *
++ * Note that these are unshifted addresses.
++ */
++#define PX4_I2C_OBDEV_LED	0x55
++#define PX4_I2C_OBDEV_HMC5883	0x1e
++
++/* User GPIOs
++ *
++ * GPIO0-5 are the PWM servo outputs.
++ */
++#define GPIO_GPIO0_INPUT	(GPIO_INPUT|GPIO_PULLUP|GPIO_PORTE|GPIO_PIN14)
++#define GPIO_GPIO1_INPUT	(GPIO_INPUT|GPIO_PULLUP|GPIO_PORTE|GPIO_PIN13)
++#define GPIO_GPIO2_INPUT	(GPIO_INPUT|GPIO_PULLUP|GPIO_PORTE|GPIO_PIN11)
++#define GPIO_GPIO3_INPUT	(GPIO_INPUT|GPIO_PULLUP|GPIO_PORTE|GPIO_PIN9)
++#define GPIO_GPIO4_INPUT	(GPIO_INPUT|GPIO_PULLUP|GPIO_PORTD|GPIO_PIN13)
++#define GPIO_GPIO5_INPUT	(GPIO_INPUT|GPIO_PULLUP|GPIO_PORTD|GPIO_PIN14)
++#define GPIO_GPIO0_OUTPUT	(GPIO_OUTPUT|GPIO_PUSHPULL|GPIO_SPEED_2MHz|GPIO_OUTPUT_CLEAR|GPIO_PORTE|GPIO_PIN14)
++#define GPIO_GPIO1_OUTPUT	(GPIO_OUTPUT|GPIO_PUSHPULL|GPIO_SPEED_2MHz|GPIO_OUTPUT_CLEAR|GPIO_PORTE|GPIO_PIN13)
++#define GPIO_GPIO2_OUTPUT	(GPIO_OUTPUT|GPIO_PUSHPULL|GPIO_SPEED_2MHz|GPIO_OUTPUT_CLEAR|GPIO_PORTE|GPIO_PIN11)
++#define GPIO_GPIO3_OUTPUT	(GPIO_OUTPUT|GPIO_PUSHPULL|GPIO_SPEED_2MHz|GPIO_OUTPUT_CLEAR|GPIO_PORTE|GPIO_PIN9)
++#define GPIO_GPIO4_OUTPUT	(GPIO_OUTPUT|GPIO_PUSHPULL|GPIO_SPEED_2MHz|GPIO_OUTPUT_CLEAR|GPIO_PORTD|GPIO_PIN13)
++#define GPIO_GPIO5_OUTPUT	(GPIO_OUTPUT|GPIO_PUSHPULL|GPIO_SPEED_2MHz|GPIO_OUTPUT_CLEAR|GPIO_PORTD|GPIO_PIN14)
++
++/* Power supply control and monitoring GPIOs */
++#define GPIO_VDD_5V_PERIPH_EN	(GPIO_OUTPUT|GPIO_PUSHPULL|GPIO_SPEED_2MHz|GPIO_OUTPUT_CLEAR|GPIO_PORTA|GPIO_PIN8)
++#define GPIO_VDD_BRICK_VALID	(GPIO_INPUT|GPIO_PULLUP|GPIO_PORTB|GPIO_PIN5)
++#define GPIO_VDD_SERVO_VALID	(GPIO_INPUT|GPIO_PULLUP|GPIO_PORTB|GPIO_PIN7)
++#define GPIO_VDD_3V3_SENSORS_EN	(GPIO_OUTPUT|GPIO_PUSHPULL|GPIO_SPEED_2MHz|GPIO_OUTPUT_SET|GPIO_PORTE|GPIO_PIN3)
++#define GPIO_VDD_5V_HIPOWER_OC	(GPIO_INPUT|GPIO_PULLUP|GPIO_PORTE|GPIO_PIN10)
++#define GPIO_VDD_5V_PERIPH_OC	(GPIO_INPUT|GPIO_PULLUP|GPIO_PORTE|GPIO_PIN15)
++
++/* Tone alarm output */
++#define TONE_ALARM_TIMER	2	/* timer 2 */
++#define TONE_ALARM_CHANNEL	1	/* channel 1 */
++#define GPIO_TONE_ALARM_IDLE	(GPIO_OUTPUT|GPIO_PUSHPULL|GPIO_SPEED_2MHz|GPIO_OUTPUT_CLEAR|GPIO_PORTA|GPIO_PIN15)
++#define GPIO_TONE_ALARM		(GPIO_ALT|GPIO_AF1|GPIO_SPEED_2MHz|GPIO_PUSHPULL|GPIO_PORTA|GPIO_PIN15)
++
++/* PWM
++ *
++ * Six PWM outputs are configured.
++ *
++ * Pins:
++ *
++ * CH1 : PE14 : TIM1_CH4
++ * CH2 : PE13 : TIM1_CH3
++ * CH3 : PE11 : TIM1_CH2
++ * CH4 : PE9  : TIM1_CH1
++ * CH5 : PD13 : TIM4_CH2
++ * CH6 : PD14 : TIM4_CH3
++ */
++#define GPIO_TIM1_CH1OUT	GPIO_TIM1_CH1OUT_2
++#define GPIO_TIM1_CH2OUT	GPIO_TIM1_CH2OUT_2
++#define GPIO_TIM1_CH3OUT	GPIO_TIM1_CH3OUT_2
++#define GPIO_TIM1_CH4OUT	GPIO_TIM1_CH4OUT_2
++#define GPIO_TIM4_CH2OUT	GPIO_TIM4_CH2OUT_2
++#define GPIO_TIM4_CH3OUT	GPIO_TIM4_CH3OUT_2
++
++
++/* USB OTG FS
++ *
++ * PA9  OTG_FS_VBUS VBUS sensing
++ */
++#define GPIO_OTGFS_VBUS		(GPIO_INPUT|GPIO_FLOAT|GPIO_SPEED_100MHz|GPIO_OPENDRAIN|GPIO_PORTA|GPIO_PIN9)
++
++/* High-resolution timer */
++#define HRT_TIMER		8	/* use timer8 for the HRT */
++#define HRT_TIMER_CHANNEL	1	/* use capture/compare channel */
++
++/****************************************************************************************************
++ * Public Types
++ ****************************************************************************************************/
++
++/****************************************************************************************************
++ * Public data
++ ****************************************************************************************************/
++
++#ifndef __ASSEMBLY__
++
++/****************************************************************************************************
++ * Public Functions
++ ****************************************************************************************************/
++
++/****************************************************************************************************
++ * Name: stm32_spiinitialize
++ *
++ * Description:
++ *   Called to configure SPI chip select GPIO pins for the PX4FMU board.
++ *
++ ****************************************************************************************************/
++
++extern void stm32_spiinitialize(void);
++extern void stm32_usbinitialize(void);
++#endif /* __ASSEMBLY__ */
++#ifdef CONFIG_NSH_LIBRARY
++int nsh_archinitialize(void);
++#endif
++
++
++__END_DECLS
+diff --git a/src/drivers/boards/px4-stm32f4discovery/module.mk b/src/drivers/boards/px4-stm32f4discovery/module.mk
+new file mode 100644
+index 0000000..64362ad
+--- /dev/null
++++ b/src/drivers/boards/px4-stm32f4discovery/module.mk
+@@ -0,0 +1,10 @@
++#
++# Board-specific startup code for the PX4FMUv2
++#
++
++SRCS		 = px4discovery_init.c \
++		   px4discovery_usb.c \
++ 		   px4fmu_spi.c\
++		   px4discovery_led.c\
++		   px4fmu_pwm_servo.c\
++		   px4fmu_can.c
+diff --git a/src/drivers/boards/px4-stm32f4discovery/px4discovery_init.c b/src/drivers/boards/px4-stm32f4discovery/px4discovery_init.c
+new file mode 100644
+index 0000000..ab0f368
+--- /dev/null
++++ b/src/drivers/boards/px4-stm32f4discovery/px4discovery_init.c
+@@ -0,0 +1,333 @@
++/****************************************************************************
++ *
++ *   Copyright (C) 2012 PX4 Development Team. All rights reserved.
++ *
++ * Redistribution and use in source and binary forms, with or without
++ * modification, are permitted provided that the following conditions
++ * are met:
++ *
++ * 1. Redistributions of source code must retain the above copyright
++ *    notice, this list of conditions and the following disclaimer.
++ * 2. Redistributions in binary form must reproduce the above copyright
++ *    notice, this list of conditions and the following disclaimer in
++ *    the documentation and/or other materials provided with the
++ *    distribution.
++ * 3. Neither the name PX4 nor the names of its contributors may be
++ *    used to endorse or promote products derived from this software
++ *    without specific prior written permission.
++ *
++ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
++ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
++ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
++ * FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
++ * COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
++ * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
++ * BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS
++ * OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED
++ * AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
++ * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
++ * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
++ * POSSIBILITY OF SUCH DAMAGE.
++ *
++ ****************************************************************************/
++
++/**
++ * @file px4discovery_init.c
++ *
++ * PX4-stm32f4discovery specific early startup code.  This file implements the
++ * nsh_archinitialize() function that is called early by nsh during startup.
++ *
++ * Code here is run before the rcS script is invoked; it should start required
++ * subsystems and perform board-specific initialisation.
++ */
++
++/****************************************************************************
++ * Included Files
++ ****************************************************************************/
++
++#include <nuttx/config.h>
++
++#include <stdbool.h>
++#include <stdio.h>
++#include <debug.h>
++#include <errno.h>
++
++#include <nuttx/arch.h>
++#include <nuttx/spi.h>
++#include <nuttx/i2c.h>
++#include <nuttx/sdio.h>
++#include <nuttx/mmcsd.h>
++#include <nuttx/analog/adc.h>
++#include <nuttx/gran.h>
++
++#include <stm32.h>
++#include "board_config.h"
++#include <stm32_uart.h>
++
++#include <arch/board/board.h>
++
++#include <drivers/drv_hrt.h>
++#include <drivers/drv_led.h>
++
++#include <systemlib/cpuload.h>
++#include <systemlib/perf_counter.h>
++
++/****************************************************************************
++ * Pre-Processor Definitions
++ ****************************************************************************/
++__BEGIN_DECLS
++extern void led_init(void);
++extern void led_on(int led);
++extern void led_off(int led);
++__END_DECLS
++
++
++/* Configuration ************************************************************/
++
++/* Debug ********************************************************************/
++
++#ifdef CONFIG_CPP_HAVE_VARARGS
++#  ifdef CONFIG_DEBUG
++#    define message(...) lowsyslog(__VA_ARGS__)
++#  else
++#    define message(...) printf(__VA_ARGS__)
++#  endif
++#else
++#  ifdef CONFIG_DEBUG
++#    define message lowsyslog
++#  else
++#    define message printf
++#  endif
++#endif
++
++/****************************************************************************
++ * Protected Functions
++ ****************************************************************************/
++
++#if defined(CONFIG_FAT_DMAMEMORY)
++# if !defined(CONFIG_GRAN) || !defined(CONFIG_FAT_DMAMEMORY)
++#  error microSD DMA support requires CONFIG_GRAN
++# endif
++
++static GRAN_HANDLE dma_allocator;
++
++/*
++ * The DMA heap size constrains the total number of things that can be
++ * ready to do DMA at a time.
++ *
++ * For example, FAT DMA depends on one sector-sized buffer per filesystem plus
++ * one sector-sized buffer per file.
++ *
++ * We use a fundamental alignment / granule size of 64B; this is sufficient
++ * to guarantee alignment for the largest STM32 DMA burst (16 beats x 32bits).
++ */
++static uint8_t g_dma_heap[8192] __attribute__((aligned(64)));
++static perf_counter_t g_dma_perf;
++
++static void dma_alloc_init(void) {
++	dma_allocator = gran_initialize(g_dma_heap, sizeof(g_dma_heap), 7, /* 128B granule - must be > alignment (XXX bug?) */
++			6); /* 64B alignment */
++	if (dma_allocator == NULL) {
++		message("[boot] DMA allocator setup FAILED");
++	} else {
++		g_dma_perf = perf_alloc(PC_COUNT, "DMA allocations");
++	}
++}
++
++/****************************************************************************
++ * Public Functions
++ ****************************************************************************/
++
++/*
++ * DMA-aware allocator stubs for the FAT filesystem.
++ */
++
++__EXPORT void *fat_dma_alloc(size_t size);
++__EXPORT void fat_dma_free(FAR void *memory, size_t size);
++
++void *
++fat_dma_alloc(size_t size) {
++	perf_count(g_dma_perf);
++	return gran_alloc(dma_allocator, size);
++}
++
++void fat_dma_free(FAR void *memory, size_t size) {
++	gran_free(dma_allocator, memory, size);
++}
++
++#else
++
++# define dma_alloc_init()
++
++#endif
++/****************************************************************************
++ * Protected Functions
++ ****************************************************************************/
++
++/****************************************************************************
++ * Public Functions
++ ****************************************************************************/
++
++/************************************************************************************
++ * Name: stm32_boardinitialize
++ *
++ * Description:
++ *   All STM32 architectures must provide the following entry point.  This entry point
++ *   is called early in the intitialization -- after all memory has been configured
++ *   and mapped but before any devices have been initialized.
++ *
++ ************************************************************************************/
++
++__EXPORT void stm32_boardinitialize(void) {
++	/* configure SPI interfaces */
++	stm32_spiinitialize();
++	/* configure LEDs */
++	up_ledinit();
++}
++
++/****************************************************************************
++ * Name: nsh_archinitialize
++ *
++ * Description:
++ *   Perform architecture specific initialization
++ *
++ ****************************************************************************/
++
++#include <math.h>
++
++static struct spi_dev_s *spi1;
++static struct spi_dev_s *spi2;
++static struct spi_dev_s *spi3;
++static struct sdio_dev_s *sdio;
++
++#ifdef __cplusplus
++__EXPORT int matherr(struct __exception *e)
++{
++	return 1;
++}
++#else
++__EXPORT int matherr(struct exception *e) {
++	return 1;
++}
++#endif
++
++__EXPORT int nsh_archinitialize(void) {
++	//int result;
++
++	/* configure always-on ADC pins */
++	stm32_configgpio(GPIO_ADC1_IN10);
++	stm32_configgpio(GPIO_ADC1_IN11);
++	/* IN12 and IN13 further below */
++
++	/* configure the high-resolution time/callout interface */
++	hrt_init();
++	dma_alloc_init();
++
++	/* configure CPU load estimation */
++#ifdef CONFIG_SCHED_INSTRUMENTATION
++	cpuload_initialize_once();
++#endif
++
++	/* set up the serial DMA polling */
++	static struct hrt_call serial_dma_call;
++	struct timespec ts;
++
++	/*
++	 * Poll at 1ms intervals for received bytes that have not triggered
++	 * a DMA event.
++	 */
++	ts.tv_sec = 0;
++	ts.tv_nsec = 1000000;
++
++	hrt_call_every(&serial_dma_call, ts_to_abstime(&ts), ts_to_abstime(&ts),
++			(hrt_callout) stm32_serial_dma_poll,
++			NULL);
++
++	/* initial LED state */
++	drv_led_start();
++	led_on(0);
++	led_on(1);
++	led_on(2);
++	led_on(3);
++
++	/* Configure SPI-based devices */
++
++	spi1 = up_spiinitialize(1);
++
++	if (!spi1) {
++		message("[boot] FAILED to initialize SPI port 1\n");up_ledon(LED_AMBER);
++		return -ENODEV;
++	}
++
++	/* Default SPI1 to 1MHz and de-assert the known chip selects. */
++	SPI_SETFREQUENCY(spi1, 10000000);
++	SPI_SETBITS(spi1, 8);
++	SPI_SETMODE(spi1, SPIDEV_MODE3);
++	SPI_SELECT(spi1, PX4_SPIDEV_GYRO, false);
++	SPI_SELECT(spi1, PX4_SPIDEV_ACCEL_MAG, false);
++	SPI_SELECT(spi1, PX4_SPIDEV_BARO, false);
++	SPI_SELECT(spi1, PX4_SPIDEV_MPU, false);
++	up_udelay(20);
++
++	message("[boot] Initialized SPI port 1 (SENSORS)\n");
++
++	spi2 = up_spiinitialize(2);
++
++	if (!spi2) {
++		message("[boot] FAILED to initialize SPI port 2\n");
++		//up_ledon(LED_AMBER);
++		return -ENODEV;
++	}
++
++	/* Default SPI2 to 37.5 MHz (40 MHz rounded to nearest valid divider, F4 max)
++	 * and de-assert the known chip selects. */
++
++	// XXX start with 10.4 MHz in FRAM usage and go up to 37.5 once validated
++	SPI_SETFREQUENCY(spi2, 12 * 1000 * 1000);
++	SPI_SETBITS(spi2, 8);
++	SPI_SETMODE(spi2, SPIDEV_MODE3);
++	SPI_SELECT(spi2, SPIDEV_FLASH, false);
++
++	message("[boot] Initialized SPI port 2 (RAMTRON FRAM)\n");
++
++	spi3 = up_spiinitialize(3);
++	if (!spi3) {
++		message("[boot] FAILED to initialize SPI port 1\n");
++		return -ENODEV;
++	}
++
++//	/* Default SPI4 to 1MHz and de-assert the known chip selects. */
++	SPI_SETFREQUENCY(spi3, 10000000);
++	SPI_SETBITS(spi3, 8);
++	SPI_SETMODE(spi3, SPIDEV_MODE3);
++	SPI_SELECT(spi3, PX4_SPIDEV_EXT0, false);
++	SPI_SELECT(spi3, PX4_SPIDEV_EXT1, false);
++
++	message("[boot] Initialized SPI port 4\n");
++#ifdef CONFIG_MMCSD
++	/* First, get an instance of the SDIO interface */
++
++	sdio = sdio_initialize(CONFIG_NSH_MMCSDSLOTNO);
++	if (!sdio) {
++		message("[boot] Failed to initialize SDIO slot %d\n",
++				CONFIG_NSH_MMCSDSLOTNO);
++		return -ENODEV;
++	}
++
++	/* Now bind the SDIO interface to the MMC/SD driver */
++	int ret = mmcsd_slotinitialize(CONFIG_NSH_MMCSDMINOR, sdio);
++	if (ret != OK) {
++		message("[boot] Failed to bind SDIO to the MMC/SD driver: %d\n", ret);
++		return ret;
++	}
++
++	/* Then let's guess and say that there is a card in the slot. There is no card detect GPIO. */
++	sdio_mediachange(sdio, true);
++
++	message("[boot] Initialized SDIO\n");
++#endif
++	/* Get the SPI port for the FRAM */
++
++//
++	return OK;
++}
+diff --git a/src/drivers/boards/px4-stm32f4discovery/px4discovery_led.c b/src/drivers/boards/px4-stm32f4discovery/px4discovery_led.c
+new file mode 100644
+index 0000000..3451dbb
+--- /dev/null
++++ b/src/drivers/boards/px4-stm32f4discovery/px4discovery_led.c
+@@ -0,0 +1,137 @@
++/****************************************************************************
++ *
++ *   Copyright (c) 2013 PX4 Development Team. All rights reserved.
++ *
++ * Redistribution and use in source and binary forms, with or without
++ * modification, are permitted provided that the following conditions
++ * are met:
++ *
++ * 1. Redistributions of source code must retain the above copyright
++ *    notice, this list of conditions and the following disclaimer.
++ * 2. Redistributions in binary form must reproduce the above copyright
++ *    notice, this list of conditions and the following disclaimer in
++ *    the documentation and/or other materials provided with the
++ *    distribution.
++ * 3. Neither the name PX4 nor the names of its contributors may be
++ *    used to endorse or promote products derived from this software
++ *    without specific prior written permission.
++ *
++ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
++ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
++ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
++ * FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
++ * COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
++ * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
++ * BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS
++ * OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED
++ * AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
++ * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
++ * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
++ * POSSIBILITY OF SUCH DAMAGE.
++ *
++ ****************************************************************************/
++
++/**
++ * @file px4discovery_led.c
++ *
++ * PX4-stm32f4discovery LED backend.
++ */
++
++#include <nuttx/config.h>
++
++#include <stdbool.h>
++
++#include "stm32.h"
++#include "board_config.h"
++
++#include <arch/board/board.h>
++
++/*
++ * Ideally we'd be able to get these from up_internal.h,
++ * but since we want to be able to disable the NuttX use
++ * of leds for system indication at will and there is no
++ * separate switch, we need to build independent of the
++ * CONFIG_ARCH_LEDS configuration switch.
++ */
++__BEGIN_DECLS
++extern void led_init(void);
++extern void led_on(int led);
++extern void led_off(int led);
++extern void led_toggle(int led);
++__END_DECLS
++
++
++__EXPORT void led_init() {
++	/* Configure LED1 GPIO for output */
++
++	stm32_configgpio(GPIO_LED1);
++	stm32_configgpio(GPIO_LED2);
++	stm32_configgpio(GPIO_LED3);
++	stm32_configgpio(GPIO_LED4);
++}
++
++__EXPORT void led_on(int led) {
++	if (led == 0) {
++		/* Pull up to switch off */
++		stm32_gpiowrite(GPIO_LED1, false);
++	}
++	if (led == 1) {
++		/* Pull up to switch off */
++		stm32_gpiowrite(GPIO_LED2, false);
++	}
++
++	if (led == 2) {
++		/* Pull up to switch off */
++		stm32_gpiowrite(GPIO_LED3, true);
++	}
++	if (led == 3) {
++		/* Pull up to switch off */
++		stm32_gpiowrite(GPIO_LED4, true);
++	}
++}
++
++__EXPORT void led_off(int led) {
++	if (led == 0) {
++		/* Pull up to switch off */
++		stm32_gpiowrite(GPIO_LED1, true);
++	}
++	if (led == 1) {
++		/* Pull up to switch off */
++		stm32_gpiowrite(GPIO_LED2, true);
++	}
++	if (led == 2) {
++		/* Pull up to switch off */
++		stm32_gpiowrite(GPIO_LED3, false);
++	}
++	if (led == 3) {
++		/* Pull up to switch off */
++		stm32_gpiowrite(GPIO_LED4, false);
++	}
++}
++
++__EXPORT void led_toggle(int led) {
++	if (led == 1) {
++		if (stm32_gpioread(GPIO_LED1))
++			stm32_gpiowrite(GPIO_LED1, false);
++		else
++			stm32_gpiowrite(GPIO_LED1, true);
++	}
++	if (led == 2) {
++		if (stm32_gpioread(GPIO_LED2))
++			stm32_gpiowrite(GPIO_LED2, false);
++		else
++			stm32_gpiowrite(GPIO_LED2, true);
++	}
++	if (led == 3) {
++		if (stm32_gpioread(GPIO_LED3))
++			stm32_gpiowrite(GPIO_LED3, false);
++		else
++			stm32_gpiowrite(GPIO_LED3, true);
++	}
++	if (led == 4) {
++		if (stm32_gpioread(GPIO_LED4))
++			stm32_gpiowrite(GPIO_LED4, false);
++		else
++			stm32_gpiowrite(GPIO_LED4, true);
++	}
++}
+diff --git a/src/drivers/boards/px4-stm32f4discovery/px4discovery_usb.c b/src/drivers/boards/px4-stm32f4discovery/px4discovery_usb.c
+new file mode 100644
+index 0000000..2e40345
+--- /dev/null
++++ b/src/drivers/boards/px4-stm32f4discovery/px4discovery_usb.c
+@@ -0,0 +1,108 @@
++/****************************************************************************
++ *
++ *   Copyright (C) 2012 PX4 Development Team. All rights reserved.
++ *
++ * Redistribution and use in source and binary forms, with or without
++ * modification, are permitted provided that the following conditions
++ * are met:
++ *
++ * 1. Redistributions of source code must retain the above copyright
++ *    notice, this list of conditions and the following disclaimer.
++ * 2. Redistributions in binary form must reproduce the above copyright
++ *    notice, this list of conditions and the following disclaimer in
++ *    the documentation and/or other materials provided with the
++ *    distribution.
++ * 3. Neither the name PX4 nor the names of its contributors may be
++ *    used to endorse or promote products derived from this software
++ *    without specific prior written permission.
++ *
++ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
++ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
++ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
++ * FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
++ * COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
++ * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
++ * BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS
++ * OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED
++ * AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
++ * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
++ * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
++ * POSSIBILITY OF SUCH DAMAGE.
++ *
++ ****************************************************************************/
++
++/**
++ * @file px4discovery_usb.c
++ *
++ * Board-specific USB functions.
++ */
++
++/************************************************************************************
++ * Included Files
++ ************************************************************************************/
++
++#include <nuttx/config.h>
++
++#include <sys/types.h>
++#include <stdint.h>
++#include <stdbool.h>
++#include <debug.h>
++
++#include <nuttx/usb/usbdev.h>
++#include <nuttx/usb/usbdev_trace.h>
++
++#include <up_arch.h>
++#include <stm32.h>
++#include "board_config.h"
++
++/************************************************************************************
++ * Definitions
++ ************************************************************************************/
++
++/************************************************************************************
++ * Private Functions
++ ************************************************************************************/
++
++/************************************************************************************
++ * Public Functions
++ ************************************************************************************/
++
++/************************************************************************************
++ * Name: stm32_usbinitialize
++ *
++ * Description:
++ *   Called to setup USB-related GPIO pins for the PX4FMU board.
++ *
++ ************************************************************************************/
++
++__EXPORT void stm32_usbinitialize(void)
++{
++	/* The OTG FS has an internal soft pull-up */
++
++	/* Configure the OTG FS VBUS sensing GPIO, Power On, and Overcurrent GPIOs */
++
++#ifdef CONFIG_STM32_OTGFS
++	stm32_configgpio(GPIO_OTGFS_VBUS);
++	/* XXX We only support device mode
++	stm32_configgpio(GPIO_OTGFS_PWRON);
++	stm32_configgpio(GPIO_OTGFS_OVER);
++	*/
++#endif
++}
++
++/************************************************************************************
++ * Name:  stm32_usbsuspend
++ *
++ * Description:
++ *   Board logic must provide the stm32_usbsuspend logic if the USBDEV driver is
++ *   used.  This function is called whenever the USB enters or leaves suspend mode.
++ *   This is an opportunity for the board logic to shutdown clocks, power, etc.
++ *   while the USB is suspended.
++ *
++ ************************************************************************************/
++
++__EXPORT void stm32_usbsuspend(FAR struct usbdev_s *dev, bool resume)
++{
++	ulldbg("resume: %d\n", resume);
++}
++
+diff --git a/src/drivers/boards/px4-stm32f4discovery/px4fmu_can.c b/src/drivers/boards/px4-stm32f4discovery/px4fmu_can.c
+new file mode 100644
+index 0000000..f66c7cd
+--- /dev/null
++++ b/src/drivers/boards/px4-stm32f4discovery/px4fmu_can.c
+@@ -0,0 +1,144 @@
++/****************************************************************************
++ *
++ *   Copyright (C) 2012 PX4 Development Team. All rights reserved.
++ *
++ * Redistribution and use in source and binary forms, with or without
++ * modification, are permitted provided that the following conditions
++ * are met:
++ *
++ * 1. Redistributions of source code must retain the above copyright
++ *    notice, this list of conditions and the following disclaimer.
++ * 2. Redistributions in binary form must reproduce the above copyright
++ *    notice, this list of conditions and the following disclaimer in
++ *    the documentation and/or other materials provided with the
++ *    distribution.
++ * 3. Neither the name PX4 nor the names of its contributors may be
++ *    used to endorse or promote products derived from this software
++ *    without specific prior written permission.
++ *
++ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
++ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
++ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
++ * FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
++ * COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
++ * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
++ * BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS
++ * OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED
++ * AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
++ * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
++ * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
++ * POSSIBILITY OF SUCH DAMAGE.
++ *
++ ****************************************************************************/
++
++/**
++ * @file px4fmu_can.c
++ *
++ * Board-specific CAN functions.
++ */
++
++/************************************************************************************
++ * Included Files
++ ************************************************************************************/
++
++#include <nuttx/config.h>
++
++#include <errno.h>
++#include <debug.h>
++
++#include <nuttx/can.h>
++#include <arch/board/board.h>
++
++#include "chip.h"
++#include "up_arch.h"
++
++#include "stm32.h"
++#include "stm32_can.h"
++#include "board_config.h"
++
++#ifdef CONFIG_CAN
++
++/************************************************************************************
++ * Pre-processor Definitions
++ ************************************************************************************/
++/* Configuration ********************************************************************/
++
++#if defined(CONFIG_STM32_CAN1) && defined(CONFIG_STM32_CAN2)
++#  warning "Both CAN1 and CAN2 are enabled.  Assuming only CAN1."
++#  undef CONFIG_STM32_CAN2
++#endif
++
++#ifdef CONFIG_STM32_CAN1
++#  define CAN_PORT 1
++#else
++#  define CAN_PORT 2
++#endif
++
++/* Debug ***************************************************************************/
++/* Non-standard debug that may be enabled just for testing CAN */
++
++#ifdef CONFIG_DEBUG_CAN
++#  define candbg    dbg
++#  define canvdbg   vdbg
++#  define canlldbg  lldbg
++#  define canllvdbg llvdbg
++#else
++#  define candbg(x...)
++#  define canvdbg(x...)
++#  define canlldbg(x...)
++#  define canllvdbg(x...)
++#endif
++
++/************************************************************************************
++ * Private Functions
++ ************************************************************************************/
++
++/************************************************************************************
++ * Public Functions
++ ************************************************************************************/
++
++/************************************************************************************
++ * Name: can_devinit
++ *
++ * Description:
++ *   All STM32 architectures must provide the following interface to work with
++ *   examples/can.
++ *
++ ************************************************************************************/
++
++int can_devinit(void)
++{
++	static bool initialized = false;
++	struct can_dev_s *can;
++	int ret;
++
++	/* Check if we have already initialized */
++
++	if (!initialized) {
++		/* Call stm32_caninitialize() to get an instance of the CAN interface */
++
++		can = stm32_caninitialize(CAN_PORT);
++
++		if (can == NULL) {
++			candbg("ERROR:  Failed to get CAN interface\n");
++			return -ENODEV;
++		}
++
++		/* Register the CAN driver at "/dev/can0" */
++
++		ret = can_register("/dev/can0", can);
++
++		if (ret < 0) {
++			candbg("ERROR: can_register failed: %d\n", ret);
++			return ret;
++		}
++
++		/* Now we are initialized */
++
++		initialized = true;
++	}
++
++	return OK;
++}
++
++#endif
+\ No newline at end of file
+diff --git a/src/drivers/boards/px4-stm32f4discovery/px4fmu_pwm_servo.c b/src/drivers/boards/px4-stm32f4discovery/px4fmu_pwm_servo.c
+new file mode 100644
+index 0000000..600dfef
+--- /dev/null
++++ b/src/drivers/boards/px4-stm32f4discovery/px4fmu_pwm_servo.c
+@@ -0,0 +1,105 @@
++/****************************************************************************
++ *
++ *   Copyright (C) 2012 PX4 Development Team. All rights reserved.
++ *
++ * Redistribution and use in source and binary forms, with or without
++ * modification, are permitted provided that the following conditions
++ * are met:
++ *
++ * 1. Redistributions of source code must retain the above copyright
++ *    notice, this list of conditions and the following disclaimer.
++ * 2. Redistributions in binary form must reproduce the above copyright
++ *    notice, this list of conditions and the following disclaimer in
++ *    the documentation and/or other materials provided with the
++ *    distribution.
++ * 3. Neither the name PX4 nor the names of its contributors may be
++ *    used to endorse or promote products derived from this software
++ *    without specific prior written permission.
++ *
++ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
++ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
++ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
++ * FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
++ * COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
++ * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
++ * BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS
++ * OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED
++ * AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
++ * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
++ * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
++ * POSSIBILITY OF SUCH DAMAGE.
++ *
++ ****************************************************************************/
++
++/*
++ * @file px4fmu_pwm_servo.c
++ *
++ * Configuration data for the stm32 pwm_servo driver.
++ *
++ * Note that these arrays must always be fully-sized.
++ */
++
++#include <stdint.h>
++
++#include <stm32.h>
++#include <stm32_gpio.h>
++#include <stm32_tim.h>
++
++#include <drivers/stm32/drv_pwm_servo.h>
++#include <drivers/drv_pwm_output.h>
++
++#include "board_config.h"
++
++__EXPORT const struct pwm_servo_timer pwm_timers[PWM_SERVO_MAX_TIMERS] = {
++	{
++		.base = STM32_TIM1_BASE,
++		.clock_register = STM32_RCC_APB2ENR,
++		.clock_bit = RCC_APB2ENR_TIM1EN,
++		.clock_freq = STM32_APB2_TIM1_CLKIN
++	},
++	{
++		.base = STM32_TIM4_BASE,
++		.clock_register = STM32_RCC_APB1ENR,
++		.clock_bit = RCC_APB1ENR_TIM4EN,
++		.clock_freq = STM32_APB1_TIM4_CLKIN
++	}
++};
++
++__EXPORT const struct pwm_servo_channel pwm_channels[PWM_SERVO_MAX_CHANNELS] = {
++	{
++		.gpio = GPIO_TIM1_CH4OUT,
++		.timer_index = 0,
++		.timer_channel = 4,
++		.default_value = 1000,
++	},
++	{
++		.gpio = GPIO_TIM1_CH3OUT,
++		.timer_index = 0,
++		.timer_channel = 3,
++		.default_value = 1000,
++	},
++	{
++		.gpio = GPIO_TIM1_CH2OUT,
++		.timer_index = 0,
++		.timer_channel = 2,
++		.default_value = 1000,
++	},
++	{
++		.gpio = GPIO_TIM1_CH1OUT,
++		.timer_index = 0,
++		.timer_channel = 1,
++		.default_value = 1000,
++	},
++	{
++		.gpio = GPIO_TIM4_CH2OUT,
++		.timer_index = 1,
++		.timer_channel = 2,
++		.default_value = 1000,
++	},
++	{
++		.gpio = GPIO_TIM4_CH3OUT,
++		.timer_index = 1,
++		.timer_channel = 3,
++		.default_value = 1000,
++	}
++};
+diff --git a/src/drivers/boards/px4-stm32f4discovery/px4fmu_spi.c b/src/drivers/boards/px4-stm32f4discovery/px4fmu_spi.c
+new file mode 100644
+index 0000000..cf09baa
+--- /dev/null
++++ b/src/drivers/boards/px4-stm32f4discovery/px4fmu_spi.c
+@@ -0,0 +1,233 @@
++/****************************************************************************
++ *
++ *   Copyright (C) 2012 PX4 Development Team. All rights reserved.
++ *
++ * Redistribution and use in source and binary forms, with or without
++ * modification, are permitted provided that the following conditions
++ * are met:
++ *
++ * 1. Redistributions of source code must retain the above copyright
++ *    notice, this list of conditions and the following disclaimer.
++ * 2. Redistributions in binary form must reproduce the above copyright
++ *    notice, this list of conditions and the following disclaimer in
++ *    the documentation and/or other materials provided with the
++ *    distribution.
++ * 3. Neither the name PX4 nor the names of its contributors may be
++ *    used to endorse or promote products derived from this software
++ *    without specific prior written permission.
++ *
++ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
++ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
++ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
++ * FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
++ * COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
++ * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
++ * BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS
++ * OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED
++ * AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
++ * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
++ * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
++ * POSSIBILITY OF SUCH DAMAGE.
++ *
++ ****************************************************************************/
++
++/**
++ * @file px4fmu_spi.c
++ *
++ * Board-specific SPI functions.
++ */
++
++/************************************************************************************
++ * Included Files
++ ************************************************************************************/
++
++#include <nuttx/config.h>
++
++#include <stdint.h>
++#include <stdbool.h>
++#include <debug.h>
++
++#include <nuttx/spi.h>
++#include <arch/board/board.h>
++
++#include <up_arch.h>
++#include <chip.h>
++#include <stm32.h>
++#include "board_config.h"
++
++/************************************************************************************
++ * Public Functions
++ ************************************************************************************/
++
++/************************************************************************************
++ * Name: stm32_spiinitialize
++ *
++ * Description:
++ *   Called to configure SPI chip select GPIO pins for the PX4FMU board.
++ *
++ ************************************************************************************/
++
++__EXPORT void weak_function stm32_spiinitialize(void)
++{
++#ifdef CONFIG_STM32_SPI1
++	stm32_configgpio(GPIO_SPI_CS_GYRO);
++	stm32_configgpio(GPIO_SPI_CS_ACCEL_MAG);
++	stm32_configgpio(GPIO_SPI_CS_BARO);
++	stm32_configgpio(GPIO_SPI_CS_MPU);
++
++	/* De-activate all peripherals,
++	 * required for some peripheral
++	 * state machines
++	 */
++	stm32_gpiowrite(GPIO_SPI_CS_GYRO, 1);
++	stm32_gpiowrite(GPIO_SPI_CS_ACCEL_MAG, 1);
++	stm32_gpiowrite(GPIO_SPI_CS_BARO, 1);
++	stm32_gpiowrite(GPIO_SPI_CS_MPU, 1);
++
++	stm32_configgpio(GPIO_EXTI_GYRO_DRDY);
++	stm32_configgpio(GPIO_EXTI_MAG_DRDY);
++	stm32_configgpio(GPIO_EXTI_ACCEL_DRDY);
++	stm32_configgpio(GPIO_EXTI_MPU_DRDY);
++#endif
++
++#ifdef CONFIG_STM32_SPI2
++	stm32_configgpio(GPIO_SPI_CS_FRAM);
++	stm32_gpiowrite(GPIO_SPI_CS_FRAM, 1);
++#endif
++
++#ifdef CONFIG_STM32_SPI4
++	stm32_configgpio(GPIO_SPI_CS_EXT0);
++	stm32_configgpio(GPIO_SPI_CS_EXT1);
++	stm32_configgpio(GPIO_SPI_CS_EXT2);
++	stm32_configgpio(GPIO_SPI_CS_EXT3);
++	stm32_gpiowrite(GPIO_SPI_CS_EXT0, 1);
++	stm32_gpiowrite(GPIO_SPI_CS_EXT1, 1);
++	stm32_gpiowrite(GPIO_SPI_CS_EXT2, 1);
++	stm32_gpiowrite(GPIO_SPI_CS_EXT3, 1);
++#endif
++}
++
++__EXPORT void stm32_spi1select(FAR struct spi_dev_s *dev, enum spi_dev_e devid, bool selected)
++{
++	/* SPI select is active low, so write !selected to select the device */
++
++	switch (devid) {
++	case PX4_SPIDEV_GYRO:
++		/* Making sure the other peripherals are not selected */
++		stm32_gpiowrite(GPIO_SPI_CS_GYRO, !selected);
++		stm32_gpiowrite(GPIO_SPI_CS_ACCEL_MAG, 1);
++		stm32_gpiowrite(GPIO_SPI_CS_BARO, 1);
++		stm32_gpiowrite(GPIO_SPI_CS_MPU, 1);
++		break;
++
++	case PX4_SPIDEV_ACCEL_MAG:
++		/* Making sure the other peripherals are not selected */
++		stm32_gpiowrite(GPIO_SPI_CS_GYRO, 1);
++		stm32_gpiowrite(GPIO_SPI_CS_ACCEL_MAG, !selected);
++		stm32_gpiowrite(GPIO_SPI_CS_BARO, 1);
++		stm32_gpiowrite(GPIO_SPI_CS_MPU, 1);
++		break;
++
++	case PX4_SPIDEV_BARO:
++		/* Making sure the other peripherals are not selected */
++		stm32_gpiowrite(GPIO_SPI_CS_GYRO, 1);
++		stm32_gpiowrite(GPIO_SPI_CS_ACCEL_MAG, 1);
++		stm32_gpiowrite(GPIO_SPI_CS_BARO, !selected);
++		stm32_gpiowrite(GPIO_SPI_CS_MPU, 1);
++		break;
++
++	case PX4_SPIDEV_MPU:
++		/* Making sure the other peripherals are not selected */
++		stm32_gpiowrite(GPIO_SPI_CS_GYRO, 1);
++		stm32_gpiowrite(GPIO_SPI_CS_ACCEL_MAG, 1);
++		stm32_gpiowrite(GPIO_SPI_CS_BARO, 1);
++		stm32_gpiowrite(GPIO_SPI_CS_MPU, !selected);
++		break;
++
++	default:
++		break;
++	}
++}
++
++__EXPORT uint8_t stm32_spi1status(FAR struct spi_dev_s *dev, enum spi_dev_e devid)
++{
++	return SPI_STATUS_PRESENT;
++}
++
++
++#ifdef CONFIG_STM32_SPI2
++__EXPORT void stm32_spi2select(FAR struct spi_dev_s *dev, enum spi_dev_e devid, bool selected)
++{
++	/* there can only be one device on this bus, so always select it */
++	stm32_gpiowrite(GPIO_SPI_CS_FRAM, !selected);
++}
++
++
++#endif
++
++__EXPORT void stm32_spi4select(FAR struct spi_dev_s *dev, enum spi_dev_e devid, bool selected)
++{
++	/* SPI select is active low, so write !selected to select the device */
++
++	switch (devid) {
++	case PX4_SPIDEV_EXT0:
++		/* Making sure the other peripherals are not selected */
++		stm32_gpiowrite(GPIO_SPI_CS_EXT0, !selected);
++		stm32_gpiowrite(GPIO_SPI_CS_EXT1, 1);
++		stm32_gpiowrite(GPIO_SPI_CS_EXT2, 1);
++		stm32_gpiowrite(GPIO_SPI_CS_EXT3, 1);
++		break;
++
++	case PX4_SPIDEV_EXT1:
++		/* Making sure the other peripherals are not selected */
++		stm32_gpiowrite(GPIO_SPI_CS_EXT0, 1);
++		stm32_gpiowrite(GPIO_SPI_CS_EXT1, !selected);
++		stm32_gpiowrite(GPIO_SPI_CS_EXT2, 1);
++		stm32_gpiowrite(GPIO_SPI_CS_EXT3, 1);
++		break;
++
++	case PX4_SPIDEV_EXT2:
++		/* Making sure the other peripherals are not selected */
++		stm32_gpiowrite(GPIO_SPI_CS_EXT0, 1);
++		stm32_gpiowrite(GPIO_SPI_CS_EXT1, 1);
++		stm32_gpiowrite(GPIO_SPI_CS_EXT2, !selected);
++		stm32_gpiowrite(GPIO_SPI_CS_EXT3, 1);
++		break;
++
++	case PX4_SPIDEV_EXT3:
++		/* Making sure the other peripherals are not selected */
++		stm32_gpiowrite(GPIO_SPI_CS_EXT0, 1);
++		stm32_gpiowrite(GPIO_SPI_CS_EXT1, 1);
++		stm32_gpiowrite(GPIO_SPI_CS_EXT2, 1);
++		stm32_gpiowrite(GPIO_SPI_CS_EXT3, !selected);
++		break;
++
++	default:
++		break;
++
++	}
++}
++
++__EXPORT uint8_t stm32_spi4status(FAR struct spi_dev_s *dev, enum spi_dev_e devid)
++{
++	return SPI_STATUS_PRESENT;
++}
++
++__EXPORT uint8_t stm32_spi2status(FAR struct spi_dev_s *dev, enum spi_dev_e devid)
++{
++	return SPI_STATUS_PRESENT;
++}
++
++
++__EXPORT void stm32_spi3select(FAR struct spi_dev_s *dev, enum spi_dev_e devid, bool selected)
++{
++	/* there can only be one device on this bus, so always select it */
++	stm32_gpiowrite(GPIO_SPI_CS_SDCARD, !selected);
++}
++
++__EXPORT uint8_t stm32_spi3status(FAR struct spi_dev_s *dev, enum spi_dev_e devid)
++{
++	/* this is actually bogus, but PX4 has no way to sense the presence of an SD card */
++	return SPI_STATUS_PRESENT;
++}
++
+diff --git a/src/drivers/boards/px4-stm32f4discovery/up_watchdog.c b/src/drivers/boards/px4-stm32f4discovery/up_watchdog.c
+new file mode 100644
+index 0000000..4bef40f
+--- /dev/null
++++ b/src/drivers/boards/px4-stm32f4discovery/up_watchdog.c
+@@ -0,0 +1,136 @@
++/************************************************************************************
++ * configs/stm32f4discovery/src/up_watchdog.c
++ * arch/arm/src/board/up_watchdog.c
++ *
++ *   Copyright (C) 2012 Gregory Nutt. All rights reserved.
++ *   Author: Gregory Nutt <gnutt@nuttx.org>
++ *
++ * Redistribution and use in source and binary forms, with or without
++ * modification, are permitted provided that the following conditions
++ * are met:
++ *
++ * 1. Redistributions of source code must retain the above copyright
++ *    notice, this list of conditions and the following disclaimer.
++ * 2. Redistributions in binary form must reproduce the above copyright
++ *    notice, this list of conditions and the following disclaimer in
++ *    the documentation and/or other materials provided with the
++ *    distribution.
++ * 3. Neither the name NuttX nor the names of its contributors may be
++ *    used to endorse or promote products derived from this software
++ *    without specific prior written permission.
++ *
++ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
++ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
++ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
++ * FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
++ * COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
++ * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
++ * BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS
++ * OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED
++ * AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
++ * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
++ * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
++ * POSSIBILITY OF SUCH DAMAGE.
++ *
++ ************************************************************************************/
++
++/************************************************************************************
++ * Included Files
++ ************************************************************************************/
++
++#include <nuttx/config.h>
++
++#include <errno.h>
++#include <debug.h>
++
++#include <nuttx/watchdog.h>
++#include <arch/board/board.h>
++
++#include "stm32_wdg.h"
++
++#ifdef CONFIG_WATCHDOG
++
++/************************************************************************************
++ * Definitions
++ ************************************************************************************/
++/* Configuration *******************************************************************/
++/* Wathdog hardware should be enabled */
++
++#if !defined(CONFIG_STM32_WWDG) && !defined(CONFIG_STM32_IWDG)
++#  warning "One of CONFIG_STM32_WWDG or CONFIG_STM32_IWDG must be defined"
++#endif
++
++/* Select the path to the registered watchdog timer device */
++
++#ifndef CONFIG_STM32_WDG_DEVPATH
++#  ifdef CONFIG_EXAMPLES_WATCHDOG_DEVPATH
++#    define CONFIG_STM32_WDG_DEVPATH CONFIG_EXAMPLES_WATCHDOG_DEVPATH
++#  else
++#    define CONFIG_STM32_WDG_DEVPATH "/dev/watchdog0"
++#  endif
++#endif
++
++/* Use the un-calibrated LSI frequency if we have nothing better */
++
++#if defined(CONFIG_STM32_IWDG) && !defined(CONFIG_STM32_LSIFREQ)
++#  define CONFIG_STM32_LSIFREQ STM32_LSI_FREQUENCY
++#endif
++
++/* Debug ***************************************************************************/
++/* Non-standard debug that may be enabled just for testing the watchdog timer */
++
++#ifndef CONFIG_DEBUG
++#  undef CONFIG_DEBUG_WATCHDOG
++#endif
++
++#ifdef CONFIG_DEBUG_WATCHDOG
++#  define wdgdbg                 dbg
++#  define wdglldbg               lldbg
++#  ifdef CONFIG_DEBUG_VERBOSE
++#    define wdgvdbg              vdbg
++#    define wdgllvdbg            llvdbg
++#  else
++#    define wdgvdbg(x...)
++#    define wdgllvdbg(x...)
++#  endif
++#else
++#  define wdgdbg(x...)
++#  define wdglldbg(x...)
++#  define wdgvdbg(x...)
++#  define wdgllvdbg(x...)
++#endif
++
++/************************************************************************************
++ * Private Functions
++ ************************************************************************************/
++
++/************************************************************************************
++ * Public Functions
++ ************************************************************************************/
++
++/****************************************************************************
++ * Name: up_wdginitialize()
++ *
++ * Description:
++ *   Perform architecuture-specific initialization of the Watchdog hardware.
++ *   This interface must be provided by all configurations using
++ *   apps/examples/watchdog
++ *
++ ****************************************************************************/
++
++int up_wdginitialize(void)
++{
++  /* Initialize tha register the watchdog timer device */
++
++#if defined(CONFIG_STM32_WWDG)
++  stm32_wwdginitialize(CONFIG_STM32_WDG_DEVPATH);
++  return OK;
++#elif defined(CONFIG_STM32_IWDG)
++  stm32_iwdginitialize(CONFIG_STM32_WDG_DEVPATH, CONFIG_STM32_LSIFREQ);
++  return OK;
++#else
++  return -ENODEV;
++#endif
++}
++
++#endif /* CONFIG_WATCHDOG */
+diff --git a/src/drivers/drv_gpio.h b/src/drivers/drv_gpio.h
+index 5acd0d3..c9a8029 100644
+--- a/src/drivers/drv_gpio.h
++++ b/src/drivers/drv_gpio.h
+@@ -66,6 +66,31 @@
+ 
+ #endif
+ 
++#ifdef CONFIG_ARCH_BOARD_PX4_STM32F4DISCOVERY 
++/*
++ * PX4FMU GPIO numbers.
++ *
++ * For shared pins, alternate function 1 selects the non-GPIO mode
++ * (USART2, CAN2, etc.)
++ */
++# define GPIO_EXT_1             (1<<0)          /**< high-power GPIO 1 */
++# define GPIO_EXT_2             (1<<1)          /**< high-power GPIO 1 */
++# define GPIO_MULTI_1           (1<<2)          /**< USART2 CTS */
++# define GPIO_MULTI_2           (1<<3)          /**< USART2 RTS */
++# define GPIO_MULTI_3           (1<<4)          /**< USART2 TX */
++# define GPIO_MULTI_4           (1<<5)          /**< USART2 RX */
++# define GPIO_CAN_TX            (1<<6)          /**< CAN2 TX */
++# define GPIO_CAN_RX            (1<<7)          /**< CAN2 RX */
++
++/**
++ * Device paths for things that support the GPIO ioctl protocol.
++ */
++# define PX4FMU_DEVICE_PATH     "/dev/px4fmu"
++# define PX4IO_DEVICE_PATH      "/dev/px4io"
++
++#endif
++
++
+ #ifdef CONFIG_ARCH_BOARD_PX4FMU_V2
+ /*
+  * PX4FMUv2 GPIO numbers.
+diff --git a/src/drivers/drv_hc_sr04.h b/src/drivers/drv_hc_sr04.h
+new file mode 100644
+index 0000000..6d1a549
+--- /dev/null
++++ b/src/drivers/drv_hc_sr04.h
+@@ -0,0 +1,56 @@
++/****************************************************************************
++ *
++ *   Copyright (C) 2012 PX4 Development Team. All rights reserved.
++ *
++ * Redistribution and use in source and binary forms, with or without
++ * modification, are permitted provided that the following conditions
++ * are met:
++ *
++ * 1. Redistributions of source code must retain the above copyright
++ *    notice, this list of conditions and the following disclaimer.
++ * 2. Redistributions in binary form must reproduce the above copyright
++ *    notice, this list of conditions and the following disclaimer in
++ *    the documentation and/or other materials provided with the
++ *    distribution.
++ * 3. Neither the name PX4 nor the names of its contributors may be
++ *    used to endorse or promote products derived from this software
++ *    without specific prior written permission.
++ *
++ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
++ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
++ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
++ * FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
++ * COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
++ * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
++ * BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS
++ * OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED
++ * AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
++ * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
++ * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
++ * POSSIBILITY OF SUCH DAMAGE.
++ *
++ ****************************************************************************/
++
++/**
++ * @file drv_led.h
++ *
++ * LED driver API
++ */
++
++#pragma once
++
++#include <stdint.h>
++#include <sys/ioctl.h>
++
++#define HC_SR04_DEVICE_PATH		"/dev/hc_sr04"
++
++
++
++__BEGIN_DECLS
++
++/*
++ * Initialise the HC SR04 driver.
++ */
++__EXPORT void drv_hc_sr04_start(void);
++__EXPORT int hc_sr04_main(int argc, char *argv[]);
++__END_DECLS
+diff --git a/src/drivers/hc_sr04/hc_sr04.cpp b/src/drivers/hc_sr04/hc_sr04.cpp
+new file mode 100644
+index 0000000..0d638ef
+--- /dev/null
++++ b/src/drivers/hc_sr04/hc_sr04.cpp
+@@ -0,0 +1,156 @@
++/**
++ * @file hc_sr04.cpp
++ *
++ * HC-SR04 driver.
++ */
++#include <stdio.h>
++#include <stdlib.h>
++#include <string.h>
++#include <unistd.h>
++#include <time.h>
++#include <stm32.h>
++#include <semaphore.h>
++#include <nuttx/config.h>
++#include <drivers/device/device.h>
++#include <drivers/drv_hc_sr04.h>
++
++#define GPIO_TRIG (GPIO_OUTPUT|GPIO_PUSHPULL|GPIO_SPEED_2MHz|GPIO_OUTPUT_SET|GPIO_PORTC|GPIO_PIN6)
++#define GPIO_ECHO (GPIO_INPUT|GPIO_FLOAT|GPIO_EXTI|GPIO_PORTC|GPIO_PIN7)
++#define SELECT_LISTENER_DELAY 1000000
++#define DEMCR_TRCENA    0x01000000
++
++/* Core Debug registers */
++#define DEMCR           (*((volatile uint32_t *)0xE000EDFC))
++#define DWT_CTRL        (*(volatile uint32_t *)0xe0001000)
++#define CYCCNTENA       (1<<0)
++#define DWT_CYCCNT      ((volatile uint32_t *)0xE0001004)
++#define CPU_CYCLES      *DWT_CYCCNT
++__BEGIN_DECLS
++
++__END_DECLS
++static inline uint32_t getticks() {
++	return CPU_CYCLES;
++}
++class HC_SR04: device::CDev {
++public:
++	HC_SR04();
++	virtual ~HC_SR04();
++
++	virtual int init();
++	virtual ssize_t read(struct file *filp, char *buffer, size_t buflen);
++	virtual int ioctl(struct file *filp, int cmd, unsigned long arg);
++	void irqeEcho();
++	void print_info();
++private:
++
++	sem_t sem_isr;
++	unsigned int timerend;
++	static int irq_handler(int irq, FAR void *context);
++};
++
++HC_SR04::HC_SR04() :
++		CDev("hc_sr04", HC_SR04_DEVICE_PATH), sem_isr(SEM_INITIALIZER(0)) {
++	init();
++	/* Enable DWT */
++	DEMCR |= DEMCR_TRCENA;
++	*DWT_CYCCNT = 0;
++	/* Enable CPU cycle counter */
++	DWT_CTRL |= CYCCNTENA;
++	sem_init(&sem_isr, 0, 0);
++}
++
++HC_SR04::~HC_SR04() {
++}
++
++int HC_SR04::init() {
++	CDev::init();
++	stm32_configgpio(GPIO_TRIG);
++	stm32_configgpio(GPIO_ECHO);
++	stm32_gpiosetevent(GPIO_ECHO, false, true, false, irq_handler);
++	stm32_gpiowrite(GPIO_TRIG, true);
++	return 0;
++}
++ssize_t HC_SR04::read(struct file *filp, char *buffer, size_t buflen) {
++	struct timespec abstime;
++	unsigned int timestart;
++	for (;;) {
++		stm32_gpiowrite(GPIO_TRIG, true);
++		usleep(50000);
++		stm32_gpiowrite(GPIO_TRIG, false);
++
++		clock_gettime(CLOCK_REALTIME, &abstime);
++		abstime.tv_nsec += 10000000;
++		//clock_gettime(CLOCK_REALTIME, &timestart);
++		timestart = getticks();
++		//sem_init(&sem_isr, 0, 0);
++		int ret = sem_timedwait(&sem_isr, &abstime);
++
++		if (ret == ETIMEDOUT) {
++			return snprintf(buffer, buflen, "TimeOut\n");
++		}
++		if (ret == OK) {
++			long long timediff = timerend - timestart;
++
++			if (timerend < timestart) {
++				timediff += timerend + (INT_MAX - timestart);
++			}
++			int pv = (int) timediff / 1000;
++			if (pv > 12000) {
++				usleep(100000);
++				continue;
++			}
++			return snprintf(buffer, buflen, "ALT %u\n", pv);
++		}
++	}
++//return snprintf(buffer, buflen, "Error %u\n", ret);
++}
++
++int HC_SR04::ioctl(struct file *filp, int cmd, unsigned long arg) {
++	int result = OK;
++
++	switch (cmd) {
++
++	default:
++		result = CDev::ioctl(filp, cmd, arg);
++	}
++	return result;
++}
++
++void HC_SR04::print_info() {
++}
++
++void HC_SR04::irqeEcho() {
++	int svalue;
++	timerend = getticks();
++	sem_getvalue(&sem_isr, &svalue);
++	if (svalue < 0) {
++		sem_post(&sem_isr);
++	}
++}
++
++namespace {
++HC_SR04 *gHC_SR04;
++}
++
++int HC_SR04::irq_handler(int irq, FAR void *context) {
++	irqstate_t flags = irqsave();
++
++	if (gHC_SR04 != nullptr) {
++		gHC_SR04->irqeEcho();
++	}
++	irqrestore(flags);
++	return 0;
++}
++
++void drv_hc_sr04_start(void) {
++	if (gHC_SR04 == nullptr) {
++		gHC_SR04 = new HC_SR04;
++		if (gHC_SR04 != nullptr)
++			gHC_SR04->init();
++	}
++}
++
++int hc_sr04_main(int argc, char *argv[]) {
++	drv_hc_sr04_start();
++	return 0;
++}
+diff --git a/src/drivers/hc_sr04/module.mk b/src/drivers/hc_sr04/module.mk
+new file mode 100644
+index 0000000..2066953
+--- /dev/null
++++ b/src/drivers/hc_sr04/module.mk
+@@ -0,0 +1,10 @@
++######################################
++
++#
++# Build the HC-SR04 driver.
++#
++
++MODULE_COMMAND	 = hc_sr04
++SRCS		= hc_sr04.cpp
++
++MAXOPTIMIZATION	 = -Os
+diff --git a/src/drivers/px4fmu/fmu.cpp b/src/drivers/px4fmu/fmu.cpp
+index 8fcdc80..c554448 100644
+--- a/src/drivers/px4fmu/fmu.cpp
++++ b/src/drivers/px4fmu/fmu.cpp
+@@ -112,6 +112,10 @@ public:
+ 	int		set_pwm_alt_channels(uint32_t channels);
+ 
+ private:
++#if defined(CONFIG_ARCH_BOARD_PX4_STM32F4DISCOVERY)
++        static const unsigned _max_actuators = 4;
++#endif
++
+ #if defined(CONFIG_ARCH_BOARD_PX4FMU_V1)
+ 	static const unsigned _max_actuators = 4;
+ #endif
+@@ -190,6 +194,17 @@ private:
+ };
+ 
+ const PX4FMU::GPIOConfig PX4FMU::_gpio_tab[] = {
++#if defined(CONFIG_ARCH_BOARD_PX4_STM32F4DISCOVERY)
++        {GPIO_GPIO0_INPUT, GPIO_GPIO0_OUTPUT, 0},
++        {GPIO_GPIO1_INPUT, GPIO_GPIO1_OUTPUT, 0},
++        {GPIO_GPIO2_INPUT, GPIO_GPIO2_OUTPUT, GPIO_USART2_CTS_1},
++        {GPIO_GPIO3_INPUT, GPIO_GPIO3_OUTPUT, GPIO_USART2_RTS_1},
++        {GPIO_GPIO4_INPUT, GPIO_GPIO4_OUTPUT, GPIO_USART2_TX_1},
++        {GPIO_GPIO5_INPUT, GPIO_GPIO5_OUTPUT, GPIO_USART2_RX_1},
++        //{GPIO_GPIO6_INPUT, GPIO_GPIO6_OUTPUT, GPIO_CAN2_TX_2},
++        //{GPIO_GPIO7_INPUT, GPIO_GPIO7_OUTPUT, GPIO_CAN2_RX_2},
++#endif
++
+ #if defined(CONFIG_ARCH_BOARD_PX4FMU_V1)
+ 	{GPIO_GPIO0_INPUT, GPIO_GPIO0_OUTPUT, 0},
+ 	{GPIO_GPIO1_INPUT, GPIO_GPIO1_OUTPUT, 0},
+@@ -1382,17 +1397,23 @@ PX4FMU::gpio_reset(void)
+ 		}
+ 	}
+ 
+-#if defined(CONFIG_ARCH_BOARD_PX4FMU_V1)
++#if defined(CONFIG_ARCH_BOARD_PX4_STM32F4DISCOVERY)
+ 	/* if we have a GPIO direction control, set it to zero (input) */
+-	stm32_gpiowrite(GPIO_GPIO_DIR, 0);
+-	stm32_configgpio(GPIO_GPIO_DIR);
++	//stm32_gpiowrite(GPIO_GPIO_DIR, 0);
++	//stm32_configgpio(GPIO_GPIO_DIR);
+ #endif
++#if defined(CONFIG_ARCH_BOARD_PX4FMU_V1)
++        /* if we have a GPIO direction control, set it to zero (input) */
++        stm32_gpiowrite(GPIO_GPIO_DIR, 0);
++        stm32_configgpio(GPIO_GPIO_DIR);
++#endif
++
+ }
+ 
+ void
+ PX4FMU::gpio_set_function(uint32_t gpios, int function)
+ {
+-#if defined(CONFIG_ARCH_BOARD_PX4FMU_V1)
++#if defined(CONFIG_ARCH_BOARD_PX4_STM32F4DISCOVERY)
+ 
+ 	/*
+ 	 * GPIOs 0 and 1 must have the same direction as they are buffered
+@@ -1402,12 +1423,30 @@ PX4FMU::gpio_set_function(uint32_t gpios, int function)
+ 		gpios |= 3;
+ 
+ 		/* flip the buffer to output mode if required */
+-		if (GPIO_SET_OUTPUT == function)
+-			stm32_gpiowrite(GPIO_GPIO_DIR, 1);
++		//if (GPIO_SET_OUTPUT == function)
++
++			//stm32_gpiowrite(GPIO_GPIO_DIR, 1);
+ 	}
+ 
+ #endif
+ 
++#if defined(CONFIG_ARCH_BOARD_PX4FMU_V1)
++
++        /*
++         * GPIOs 0 and 1 must have the same direction as they are buffered
++         * by a shared 2-port driver.  Any attempt to set either sets both.
++         */
++        if (gpios & 3) {
++                gpios |= 3;
++
++                /* flip the buffer to output mode if required */
++                if (GPIO_SET_OUTPUT == function)
++                        stm32_gpiowrite(GPIO_GPIO_DIR, 1);
++        }
++
++#endif
++
++
+ 	/* configure selected GPIOs as required */
+ 	for (unsigned i = 0; i < _ngpio; i++) {
+ 		if (gpios & (1 << i)) {
+diff --git a/src/drivers/px4io/px4io.cpp b/src/drivers/px4io/px4io.cpp
+index cf1b89c..3a9e8ef 100644
+--- a/src/drivers/px4io/px4io.cpp
++++ b/src/drivers/px4io/px4io.cpp
+@@ -625,12 +625,14 @@ PX4IO::init()
+ 	unsigned protocol = io_reg_get(PX4IO_PAGE_CONFIG, PX4IO_P_CONFIG_PROTOCOL_VERSION);
+ 
+ 	if (protocol == _io_reg_get_error) {
+-		mavlink_and_console_log_emergency(_mavlink_fd, "Failed to communicate with IO, abort.");
++		log("failed to communicate with IO");
++		mavlink_log_emergency(_mavlink_fd, "[IO] failed to communicate with IO, abort.");
+ 		return -1;
+ 	}
+ 
+ 	if (protocol != PX4IO_PROTOCOL_VERSION) {
+-		mavlink_and_console_log_emergency(_mavlink_fd, "IO protocol/firmware mismatch, abort.");
++		log("protocol/firmware mismatch");
++		mavlink_log_emergency(_mavlink_fd, "[IO] protocol/firmware mismatch, abort.");
+ 		return -1;
+ 	}
+ 
+@@ -679,7 +681,8 @@ PX4IO::init()
+ 		/* get a status update from IO */
+ 		io_get_status();
+ 
+-		mavlink_and_console_log_emergency(_mavlink_fd, "RECOVERING FROM FMU IN-AIR RESTART");
++		mavlink_log_emergency(_mavlink_fd, "[IO] RECOVERING FROM FMU IN-AIR RESTART");
++		log("INAIR RESTART RECOVERY (needs commander app running)");
+ 
+ 		/* WARNING: COMMANDER app/vehicle status must be initialized.
+ 		 * If this fails (or the app is not started), worst-case IO
+@@ -708,7 +711,7 @@ PX4IO::init()
+ 
+ 			/* abort after 5s */
+ 			if ((hrt_absolute_time() - try_start_time) / 1000 > 3000) {
+-				mavlink_and_console_log_emergency(_mavlink_fd, "Failed to recover from in-air restart (1), abort");
++				log("failed to recover from in-air restart (1), aborting IO driver init.");
+ 				return 1;
+ 			}
+ 
+@@ -764,7 +767,7 @@ PX4IO::init()
+ 
+ 			/* abort after 5s */
+ 			if ((hrt_absolute_time() - try_start_time) / 1000 > 2000) {
+-				mavlink_and_console_log_emergency(_mavlink_fd, "Failed to recover from in-air restart (2), abort");
++				log("failed to recover from in-air restart (2), aborting IO driver init.");
+ 				return 1;
+ 			}
+ 
+@@ -806,7 +809,8 @@ PX4IO::init()
+ 			ret = io_set_rc_config();
+ 
+ 			if (ret != OK) {
+-				mavlink_and_console_log_critical(_mavlink_fd, "IO RC config upload fail");
++				log("failed to update RC input config");
++				mavlink_log_info(_mavlink_fd, "[IO] RC config upload fail");
+ 				return ret;
+ 			}
+ 		}
+@@ -843,6 +847,8 @@ PX4IO::init()
+ 		return -errno;
+ 	}
+ 
++	mavlink_log_info(_mavlink_fd, "[IO] init ok");
++
+ 	return OK;
+ }
+ 
+@@ -882,7 +888,7 @@ PX4IO::task_main()
+ 	    (_t_vehicle_control_mode < 0) ||
+ 	    (_t_param < 0) ||
+ 	    (_t_vehicle_command < 0)) {
+-		warnx("subscription(s) failed");
++		log("subscription(s) failed");
+ 		goto out;
+ 	}
+ 
+@@ -920,7 +926,7 @@ PX4IO::task_main()
+ 
+ 		/* this would be bad... */
+ 		if (ret < 0) {
+-			warnx("poll error %d", errno);
++			log("poll error %d", errno);
+ 			continue;
+ 		}
+ 
+@@ -1022,7 +1028,7 @@ PX4IO::task_main()
+ 				int pret = io_reg_set(PX4IO_PAGE_SETUP, PX4IO_P_SETUP_VBATT_SCALE, &scaling, 1);
+ 
+ 				if (pret != OK) {
+-					mavlink_and_console_log_critical(_mavlink_fd, "IO vscale upload failed");
++					log("vscale upload failed");
+ 				}
+ 
+ 				/* send RC throttle failsafe value to IO */
+@@ -1038,7 +1044,7 @@ PX4IO::task_main()
+ 						uint16_t failsafe_thr = failsafe_param_val;
+ 						pret = io_reg_set(PX4IO_PAGE_SETUP, PX4IO_P_SETUP_RC_THR_FAILSAFE_US, &failsafe_thr, 1);
+ 						if (pret != OK) {
+-							mavlink_and_console_log_critical(_mavlink_fd, "failsafe upload failed, FS: %d us", (int)failsafe_thr);
++							log("failsafe upload failed, FS: %d us", (int)failsafe_thr);
+ 						}
+ 					}
+ 				}
+@@ -1349,7 +1355,7 @@ PX4IO::io_set_rc_config()
+ 
+ 		/* check the IO initialisation flag */
+ 		if (!(io_reg_get(PX4IO_PAGE_STATUS, PX4IO_P_STATUS_FLAGS) & PX4IO_P_STATUS_FLAGS_INIT_OK)) {
+-			mavlink_and_console_log_critical(_mavlink_fd, "config for RC%d rejected by IO", i + 1);
++			log("config for RC%d rejected by IO", i + 1);
+ 			break;
+ 		}
+ 
+diff --git a/src/lib/version/version.h b/src/lib/version/version.h
+index d8ccb67..8836364 100644
+--- a/src/lib/version/version.h
++++ b/src/lib/version/version.h
+@@ -55,6 +55,10 @@
+ #define	HW_ARCH "PX4FMU_V1"
+ #endif
+ 
++#ifdef CONFIG_ARCH_BOARD_PX4_STM32F4DISCOVERY
++#define HW_ARCH "PX4_STM32F4DISCOVERY"
++#endif
++
+ #ifdef CONFIG_ARCH_BOARD_PX4FMU_V2
+ #define	HW_ARCH "PX4FMU_V2"
+ #endif
+diff --git a/src/modules/gpio_led/gpio_led.c b/src/modules/gpio_led/gpio_led.c
+index 7758fae..aa10fc6 100644
+--- a/src/modules/gpio_led/gpio_led.c
++++ b/src/modules/gpio_led/gpio_led.c
+@@ -89,6 +89,18 @@ int gpio_led_main(int argc, char *argv[])
+ 		     "\t\tr2\tPX4IO RELAY2"
+ 		    );
+ #endif
++#ifdef CONFIG_ARCH_BOARD_PX4_STM32F4DISCOVERY 
++                errx(1, "usage: gpio_led {start|stop} [-p <1|2|a1|a2|r1|r2>]\n"
++                     "\t-p\tUse pin:\n"
++                     "\t\t1\tPX4FMU GPIO_EXT1 (default)\n"
++                     "\t\t2\tPX4FMU GPIO_EXT2\n"
++                     "\t\ta1\tPX4IO ACC1\n"
++                     "\t\ta2\tPX4IO ACC2\n"
++                     "\t\tr1\tPX4IO RELAY1\n"
++                     "\t\tr2\tPX4IO RELAY2"
++                    );
++#endif
++
+ #ifdef CONFIG_ARCH_BOARD_PX4FMU_V2
+ 		errx(1, "usage: gpio_led {start|stop} [-p <n>]\n"
+ 		     "\t-p <n>\tUse specified AUX OUT pin number (default: 1)"
+@@ -111,6 +123,10 @@ int gpio_led_main(int argc, char *argv[])
+ #ifdef CONFIG_ARCH_BOARD_PX4FMU_V1
+ 			char *pin_name = "PX4FMU GPIO_EXT1";
+ #endif
++#ifdef CONFIG_ARCH_BOARD_PX4_STM32F4DISCOVERY
++                        char *pin_name = "PX4FMU GPIO_EXT1";
++#endif
++
+ #ifdef CONFIG_ARCH_BOARD_PX4FMU_V2
+ 			char pin_name[] = "AUX OUT 1";
+ #endif
+@@ -154,6 +170,25 @@ int gpio_led_main(int argc, char *argv[])
+ 					}
+ 
+ #endif
++
++#ifdef CONFIG_ARCH_BOARD_PX4_STM32F4DISCOVERY
++
++                                        if (!strcmp(argv[3], "1")) {
++                                                use_io = false;
++                                                pin = GPIO_EXT_1;
++                                                pin_name = "PX4FMU GPIO_EXT1";
++
++                                        } else if (!strcmp(argv[3], "2")) {
++                                                use_io = false;
++                                                pin = GPIO_EXT_2;
++                                                pin_name = "PX4FMU GPIO_EXT2";
++
++                                        } else {
++                                                errx(1, "unsupported pin: %s", argv[3]);
++                                        }
++
++#endif
++
+ #ifdef CONFIG_ARCH_BOARD_PX4FMU_V2
+ 					unsigned int n = strtoul(argv[3], NULL, 10);
+ 
+diff --git a/src/modules/mc_att_control/mc_att_control_main.cpp b/src/modules/mc_att_control/mc_att_control_main.cpp
+index a0d76b0..f20bba5 100644
+--- a/src/modules/mc_att_control/mc_att_control_main.cpp
++++ b/src/modules/mc_att_control/mc_att_control_main.cpp
+@@ -547,13 +547,104 @@ MulticopterAttitudeControl::vehicle_status_poll()
+ void
+ MulticopterAttitudeControl::control_attitude(float dt)
+ {
+-	vehicle_attitude_setpoint_poll();
++	float yaw_sp_move_rate = 0.0f;
++	bool publish_att_sp = false;
++
++	if (_v_control_mode.flag_control_manual_enabled) {
++		/* manual input, set or modify attitude setpoint */
++
++		if (_v_control_mode.flag_control_velocity_enabled || _v_control_mode.flag_control_climb_rate_enabled) {
++			/* in assisted modes poll 'vehicle_attitude_setpoint' topic and modify it */
++			vehicle_attitude_setpoint_poll();
++		}
++
++		if (!_v_control_mode.flag_control_climb_rate_enabled) {
++			/* pass throttle directly if not in altitude stabilized mode */
++			_v_att_sp.thrust = _manual_control_sp.z;
++			publish_att_sp = true;
++		}
++
++		if (!_armed.armed) {
++			/* reset yaw setpoint when disarmed */
++			_reset_yaw_sp = true;
++		}
++
++		/* move yaw setpoint in all modes */
++		if (_v_att_sp.thrust < 0.1f) {
++			// TODO
++			//if (_status.condition_landed) {
++			/* reset yaw setpoint if on ground */
++			//	reset_yaw_sp = true;
++			//}
++		} else {
++			/* move yaw setpoint */
++			yaw_sp_move_rate = _manual_control_sp.r * _params.man_yaw_max;
++			_v_att_sp.yaw_body = _wrap_pi(_v_att_sp.yaw_body + yaw_sp_move_rate * dt);
++			float yaw_offs_max = _params.man_yaw_max / _params.att_p(2);
++			float yaw_offs = _wrap_pi(_v_att_sp.yaw_body - _v_att.yaw);
++			if (yaw_offs < - yaw_offs_max) {
++				_v_att_sp.yaw_body = _wrap_pi(_v_att.yaw - yaw_offs_max);
++
++			} else if (yaw_offs > yaw_offs_max) {
++				_v_att_sp.yaw_body = _wrap_pi(_v_att.yaw + yaw_offs_max);
++			}
++			_v_att_sp.R_valid = false;
++			publish_att_sp = true;
++		}
++
++		/* reset yaw setpint to current position if needed */
++		if (_reset_yaw_sp) {
++			_reset_yaw_sp = false;
++			_v_att_sp.yaw_body = _v_att.yaw;
++			_v_att_sp.R_valid = false;
++			publish_att_sp = true;
++		}
++
++		if (!_v_control_mode.flag_control_velocity_enabled) {
++			/* update attitude setpoint if not in position control mode */
++			_v_att_sp.roll_body = _manual_control_sp.y * _params.man_roll_max;
++			_v_att_sp.pitch_body = -_manual_control_sp.x * _params.man_pitch_max;
++			_v_att_sp.R_valid = false;
++			publish_att_sp = true;
++		}
++
++	} else {
++		/* in non-manual mode use 'vehicle_attitude_setpoint' topic */
++		vehicle_attitude_setpoint_poll();
++
++		/* reset yaw setpoint after non-manual control mode */
++		_reset_yaw_sp = true;
++	}
+ 
+ 	_thrust_sp = _v_att_sp.thrust;
+ 
+ 	/* construct attitude setpoint rotation matrix */
+ 	math::Matrix<3, 3> R_sp;
+-	R_sp.set(_v_att_sp.R_body);
++
++	if (_v_att_sp.R_valid) {
++		/* rotation matrix in _att_sp is valid, use it */
++		R_sp.set(&_v_att_sp.R_body[0]);
++
++	} else {
++		/* rotation matrix in _att_sp is not valid, use euler angles instead */
++		R_sp.from_euler(_v_att_sp.roll_body, _v_att_sp.pitch_body, _v_att_sp.yaw_body);
++
++		/* copy rotation matrix back to setpoint struct */
++		memcpy(&_v_att_sp.R_body[0], &R_sp.data[0], sizeof(_v_att_sp.R_body));
++		_v_att_sp.R_valid = true;
++	}
++
++	/* publish the attitude setpoint if needed */
++	if (publish_att_sp && _vehicle_status.is_rotary_wing) {
++		_v_att_sp.timestamp = hrt_absolute_time();
++
++		if (_att_sp_pub > 0) {
++			orb_publish(ORB_ID(vehicle_attitude_setpoint), _att_sp_pub, &_v_att_sp);
++
++		} else {
++			_att_sp_pub = orb_advertise(ORB_ID(vehicle_attitude_setpoint), &_v_att_sp);
++		}
++	}
+ 
+ 	/* rotation matrix for current state */
+ 	math::Matrix<3, 3> R;
+@@ -629,7 +720,7 @@ MulticopterAttitudeControl::control_attitude(float dt)
+ 	_rates_sp(2) = math::constrain(_rates_sp(2), -_params.yaw_rate_max, _params.yaw_rate_max);
+ 
+ 	/* feed forward yaw setpoint rate */
+-	_rates_sp(2) += _v_att_sp.yaw_sp_move_rate * yaw_w * _params.yaw_ff;
++	_rates_sp(2) += yaw_sp_move_rate * yaw_w * _params.yaw_ff;
+ }
+ 
+ /*
+@@ -769,6 +860,9 @@ MulticopterAttitudeControl::task_main()
+ 					_rates_sp = math::Vector<3>(_manual_control_sp.y, -_manual_control_sp.x, _manual_control_sp.r).emult(_params.acro_rate_max);
+ 					_thrust_sp = _manual_control_sp.z;
+ 
++					/* reset yaw setpoint after ACRO */
++					_reset_yaw_sp = true;
++
+ 					/* publish attitude rates setpoint */
+ 					_v_rates_sp.roll = _rates_sp(0);
+ 					_v_rates_sp.pitch = _rates_sp(1);
+diff --git a/src/modules/mc_att_control/mc_att_control_params.c b/src/modules/mc_att_control/mc_att_control_params.c
+index 3025519..819847b 100644
+--- a/src/modules/mc_att_control/mc_att_control_params.c
++++ b/src/modules/mc_att_control/mc_att_control_params.c
+@@ -188,6 +188,35 @@ PARAM_DEFINE_FLOAT(MC_YAW_FF, 0.5f);
+ PARAM_DEFINE_FLOAT(MC_YAWRATE_MAX, 120.0f);
+ 
+ /**
++ * Max manual roll
++ *
++ * @unit deg
++ * @min 0.0
++ * @max 90.0
++ * @group Multicopter Attitude Control
++ */
++PARAM_DEFINE_FLOAT(MC_MAN_R_MAX, 35.0f);
++
++/**
++ * Max manual pitch
++ *
++ * @unit deg
++ * @min 0.0
++ * @max 90.0
++ * @group Multicopter Attitude Control
++ */
++PARAM_DEFINE_FLOAT(MC_MAN_P_MAX, 35.0f);
++
++/**
++ * Max manual yaw rate
++ *
++ * @unit deg/s
++ * @min 0.0
++ * @group Multicopter Attitude Control
++ */
++PARAM_DEFINE_FLOAT(MC_MAN_Y_MAX, 120.0f);
++
++/**
+  * Max acro roll rate
+  *
+  * @unit deg/s
+diff --git a/src/modules/mc_pos_control/mc_pos_control_main.cpp b/src/modules/mc_pos_control/mc_pos_control_main.cpp
+index aafc56c..b9692ff 100644
+--- a/src/modules/mc_pos_control/mc_pos_control_main.cpp
++++ b/src/modules/mc_pos_control/mc_pos_control_main.cpp
+@@ -163,10 +163,6 @@ private:
+ 		param_t tilt_max_air;
+ 		param_t land_speed;
+ 		param_t tilt_max_land;
+-		param_t man_roll_max;
+-		param_t man_pitch_max;
+-		param_t man_yaw_max;
+-		param_t mc_att_yaw_p;
+ 	}		_params_handles;		/**< handles for interesting parameters */
+ 
+ 	struct {
+@@ -175,10 +171,6 @@ private:
+ 		float tilt_max_air;
+ 		float land_speed;
+ 		float tilt_max_land;
+-		float man_roll_max;
+-		float man_pitch_max;
+-		float man_yaw_max;
+-		float mc_att_yaw_p;
+ 
+ 		math::Vector<3> pos_p;
+ 		math::Vector<3> vel_p;
+@@ -361,10 +353,6 @@ MulticopterPositionControl::MulticopterPositionControl() :
+ 	_params_handles.tilt_max_air	= param_find("MPC_TILTMAX_AIR");
+ 	_params_handles.land_speed	= param_find("MPC_LAND_SPEED");
+ 	_params_handles.tilt_max_land	= param_find("MPC_TILTMAX_LND");
+-	_params_handles.man_roll_max = param_find("MPC_MAN_R_MAX");
+-	_params_handles.man_pitch_max = param_find("MPC_MAN_P_MAX");
+-	_params_handles.man_yaw_max = param_find("MPC_MAN_Y_MAX");
+-	_params_handles.mc_att_yaw_p = param_find("MC_YAW_P");
+ 
+ 	/* fetch initial parameter values */
+ 	parameters_update(true);
+@@ -450,17 +438,6 @@ MulticopterPositionControl::parameters_update(bool force)
+ 		_params.vel_ff(2) = v;
+ 
+ 		_params.sp_offs_max = _params.vel_max.edivide(_params.pos_p) * 2.0f;
+-
+-		/* mc attitude control parameters*/
+-		/* manual control scale */
+-		param_get(_params_handles.man_roll_max, &_params.man_roll_max);
+-		param_get(_params_handles.man_pitch_max, &_params.man_pitch_max);
+-		param_get(_params_handles.man_yaw_max, &_params.man_yaw_max);
+-		_params.man_roll_max = math::radians(_params.man_roll_max);
+-		_params.man_pitch_max = math::radians(_params.man_pitch_max);
+-		_params.man_yaw_max = math::radians(_params.man_yaw_max);
+-		param_get(_params_handles.mc_att_yaw_p,&v);
+-		_params.mc_att_yaw_p = v;
+ 	}
+ 
+ 	return OK;
+@@ -924,7 +901,6 @@ MulticopterPositionControl::task_main()
+ 	bool reset_int_z = true;
+ 	bool reset_int_z_manual = false;
+ 	bool reset_int_xy = true;
+-	bool reset_yaw_sp = false;
+ 	bool was_armed = false;
+ 
+ 	hrt_abstime t_prev = 0;
+@@ -972,11 +948,6 @@ MulticopterPositionControl::task_main()
+ 
+ 		was_armed = _control_mode.flag_armed;
+ 
+-		/* check if should reset yaw setpoint for manual attitude control */
+-		if(!_arming.armed || !_control_mode.flag_control_manual_enabled || (!_control_mode.flag_control_altitude_enabled && _control_mode.flag_control_manual_enabled)) {
+-				reset_yaw_sp = true;
+-		}
+-
+ 		update_ref();
+ 
+ 		if (_control_mode.flag_control_altitude_enabled ||
+@@ -1329,6 +1300,13 @@ MulticopterPositionControl::task_main()
+ 
+ 					_att_sp.timestamp = hrt_absolute_time();
+ 
++					/* publish attitude setpoint */
++					if (_att_sp_pub > 0) {
++						orb_publish(ORB_ID(vehicle_attitude_setpoint), _att_sp_pub, &_att_sp);
++
++					} else {
++						_att_sp_pub = orb_advertise(ORB_ID(vehicle_attitude_setpoint), &_att_sp);
++					}
+ 
+ 				} else {
+ 					reset_int_z = true;
+@@ -1344,44 +1322,6 @@ MulticopterPositionControl::task_main()
+ 			reset_int_xy = true;
+ 		}
+ 
+-		if(!_control_mode.flag_control_velocity_enabled) {
+-			/* generate attitude setpoint from manual controls */
+-
+-			/* move yaw setpoint */
+-			float yaw_sp_move_rate = _manual.r * _params.man_yaw_max;
+-			_att_sp.yaw_body = _wrap_pi(_att_sp.yaw_body + yaw_sp_move_rate * dt);
+-			float yaw_offs_max = _params.man_yaw_max / _params.mc_att_yaw_p;
+-			float yaw_offs = _wrap_pi(_att_sp.yaw_body - _att.yaw);
+-			if (yaw_offs < - yaw_offs_max) {
+-				_att_sp.yaw_body = _wrap_pi(_att.yaw - yaw_offs_max);
+-
+-			} else if (yaw_offs > yaw_offs_max) {
+-				_att_sp.yaw_body = _wrap_pi(_att.yaw + yaw_offs_max);
+-			}
+-
+-			/* reset yaw setpoint to current position if needed */
+-			if (reset_yaw_sp) {
+-				reset_yaw_sp = false;
+-				_att_sp.yaw_body = _att.yaw;
+-			}
+-
+-			_att_sp.roll_body = _manual.y * _params.man_roll_max;
+-			_att_sp.pitch_body = -_manual.x * _params.man_pitch_max;
+-			_att_sp.thrust = _control_mode.flag_control_altitude_enabled ? _att_sp.thrust : _manual.z;
+-			_att_sp.yaw_sp_move_rate = yaw_sp_move_rate;
+-			math::Matrix<3,3> R_sp;
+-			R_sp.from_euler(_att_sp.roll_body,_att_sp.pitch_body,_att_sp.yaw_body);
+-			memcpy(&_att_sp.R_body[0], R_sp.data, sizeof(_att_sp.R_body));
+-			_att_sp.timestamp = hrt_absolute_time();
+-		}
+-		/* publish attitude setpoint */
+-		if (_att_sp_pub > 0) {
+-			orb_publish(ORB_ID(vehicle_attitude_setpoint), _att_sp_pub, &_att_sp);
+-
+-		} else {
+-			_att_sp_pub = orb_advertise(ORB_ID(vehicle_attitude_setpoint), &_att_sp);
+-		}
+-
+ 		/* reset altitude controller integral (hovering throttle) to manual throttle after manual throttle control */
+ 		reset_int_z_manual = _control_mode.flag_armed && _control_mode.flag_control_manual_enabled && !_control_mode.flag_control_climb_rate_enabled;
+ 	}
+diff --git a/src/modules/mc_pos_control/mc_pos_control_params.c b/src/modules/mc_pos_control/mc_pos_control_params.c
+index fc73b31..05ab576 100644
+--- a/src/modules/mc_pos_control/mc_pos_control_params.c
++++ b/src/modules/mc_pos_control/mc_pos_control_params.c
+@@ -208,32 +208,3 @@ PARAM_DEFINE_FLOAT(MPC_TILTMAX_LND, 15.0f);
+  */
+ PARAM_DEFINE_FLOAT(MPC_LAND_SPEED, 1.0f);
+ 
+-/**
+- * Max manual roll
+- *
+- * @unit deg
+- * @min 0.0
+- * @max 90.0
+- * @group Multicopter Position Control
+- */
+-PARAM_DEFINE_FLOAT(MPC_MAN_R_MAX, 35.0f);
+-
+-/**
+- * Max manual pitch
+- *
+- * @unit deg
+- * @min 0.0
+- * @max 90.0
+- * @group Multicopter Position Control
+- */
+-PARAM_DEFINE_FLOAT(MPC_MAN_P_MAX, 35.0f);
+-
+-/**
+- * Max manual yaw rate
+- *
+- * @unit deg/s
+- * @min 0.0
+- * @group Multicopter Position Control
+- */
+-PARAM_DEFINE_FLOAT(MPC_MAN_Y_MAX, 120.0f);
+-
+diff --git a/src/modules/sensors/sensors.cpp b/src/modules/sensors/sensors.cpp
+index 87d7da5..ee379f9 100644
+--- a/src/modules/sensors/sensors.cpp
++++ b/src/modules/sensors/sensors.cpp
+@@ -121,6 +121,12 @@
+ #define ADC_AIRSPEED_VOLTAGE_CHANNEL	11
+ #endif
+ 
++#ifdef CONFIG_ARCH_BOARD_PX4_STM32F4DISCOVERY
++#define ADC_BATTERY_VOLTAGE_CHANNEL     10
++#define ADC_BATTERY_CURRENT_CHANNEL     -1
++#define ADC_AIRSPEED_VOLTAGE_CHANNEL    11
++#endif
++
+ #ifdef CONFIG_ARCH_BOARD_PX4FMU_V2
+ #define ADC_BATTERY_VOLTAGE_CHANNEL	2
+ #define ADC_BATTERY_CURRENT_CHANNEL	3
+@@ -953,10 +959,37 @@ Sensors::accel_init()
+ 		/* set the accel internal sampling rate to default rate */
+ 		ioctl(fd, ACCELIOCSSAMPLERATE, ACCEL_SAMPLERATE_DEFAULT);
+ 
++#ifdef CONFIG_ARCH_BOARD_PX4FMU_V1 
++
++		/* set the accel internal sampling rate up to at leat 1000Hz */
++		ioctl(fd, ACCELIOCSSAMPLERATE, 1000);
++
++		/* set the driver to poll at 1000Hz */
++		ioctl(fd, SENSORIOCSPOLLRATE, 1000);
++#elif CONFIG_ARCH_BOARD_PX4_STM32F4DISCOVERY
++
++                /* set the accel internal sampling rate up to at leat 1000Hz */
++                ioctl(fd, ACCELIOCSSAMPLERATE, 1000);
++
++                /* set the driver to poll at 1000Hz */
++                ioctl(fd, SENSORIOCSPOLLRATE, 1000);
++
++#elif CONFIG_ARCH_BOARD_PX4FMU_V2 || CONFIG_ARCH_BOARD_AEROCORE
++
++		/* set the accel internal sampling rate up to at leat 800Hz */
++		ioctl(fd, ACCELIOCSSAMPLERATE, 800);
++
++		/* set the driver to poll at 800Hz */
++		ioctl(fd, SENSORIOCSPOLLRATE, 800);
++
++#else
++#error Need a board configuration, either CONFIG_ARCH_BOARD_PX4FMU_V1, CONFIG_ARCH_BOARD_PX4FMU_V2 or CONFIG_ARCH_BOARD_AEROCORE
++
+ 		/* set the driver to poll at default rate */
+ 		ioctl(fd, SENSORIOCSPOLLRATE, SENSOR_POLLRATE_DEFAULT);
+ 
+ 		close(fd);
++#endif
+ 	}
+ 
+ 	return OK;
+diff --git a/src/modules/systemlib/mixer/mixer_multirotor.cpp b/src/modules/systemlib/mixer/mixer_multirotor.cpp
+index b354eb5..2ab5b5e 100644
+--- a/src/modules/systemlib/mixer/mixer_multirotor.cpp
++++ b/src/modules/systemlib/mixer/mixer_multirotor.cpp
+@@ -177,10 +177,6 @@ MultirotorMixer::from_text(Mixer::ControlCallback control_cb, uintptr_t cb_handl
+ 
+ 	} else if (!strcmp(geomname, "2-")) {
+ 		geometry = MultirotorGeometry::TWIN_ENGINE;
+-
+-	} else if (!strcmp(geomname, "3y")) {
+-		geometry = MultirotorGeometry::TRI_Y;
+-
+ 	} else {
+ 		debug("unrecognised geometry '%s'", geomname);
+ 		return nullptr;
+diff --git a/src/modules/systemlib/mixer/multi_tables.py b/src/modules/systemlib/mixer/multi_tables.py
+index e01fcaf..ba59e05 100755
+--- a/src/modules/systemlib/mixer/multi_tables.py
++++ b/src/modules/systemlib/mixer/multi_tables.py
+@@ -155,14 +155,8 @@ twin_engine = [
+     [-90, 0.0],
+ ]
+ 
+-tri_y = [
+-    [  60, 0.0],
+-    [ -60, 0.0],
+-    [ 180, 0.0],
+-]
+-
+ 
+-tables = [quad_x, quad_plus, quad_v, quad_wide, quad_deadcat, hex_x, hex_plus, hex_cox, octa_x, octa_plus, octa_cox, twin_engine, tri_y]
++tables = [quad_x, quad_plus, quad_v, quad_wide, quad_deadcat, hex_x, hex_plus, hex_cox, octa_x, octa_plus, octa_cox, twin_engine]
+ 
+ def variableName(variable):
+     for variableName, value in list(globals().items()):
+diff --git a/ss.sh b/ss.sh
+new file mode 100755
+index 0000000..1c7c0f6
+--- /dev/null
++++ b/ss.sh
+@@ -0,0 +1,8 @@
++{
++    git rev-list --objects --all
++    git rev-list --objects -g --no-walk --all
++    git rev-list --objects --no-walk \
++        $(git fsck --unreachable |
++          grep '^unreachable commit' |
++          cut -d' ' -f3)
++} | sort | uniq
