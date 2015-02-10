@@ -386,7 +386,7 @@ HMC5883::~HMC5883()
 		delete _reports;
 
 	if (_class_instance != -1)
-		unregister_class_devname(MAG_DEVICE_PATH, _class_instance);
+		unregister_class_devname(MAG_BASE_DEVICE_PATH, _class_instance);
 
 	// free perf counters
 	perf_free(_sample_perf);
@@ -415,7 +415,7 @@ HMC5883::init()
 	/* reset the device configuration */
 	reset();
 
-	_class_instance = register_class_devname(MAG_DEVICE_PATH);
+	_class_instance = register_class_devname(MAG_BASE_DEVICE_PATH);
 
 	ret = OK;
 	/* sensor is ok, but not calibrated */
@@ -1355,10 +1355,9 @@ start_bus(struct hmc5883_bus_option &bus, enum Rotation rotation)
 void
 start(enum HMC5883_BUS busid, enum Rotation rotation)
 {
-	uint8_t i;
 	bool started = false;
 
-	for (i=0; i<NUM_BUS_OPTIONS; i++) {
+	for (unsigned i = 0; i < NUM_BUS_OPTIONS; i++) {
 		if (busid == HMC5883_BUS_ALL && bus_options[i].dev != NULL) {
 			// this device is already started
 			continue;
@@ -1373,7 +1372,6 @@ start(enum HMC5883_BUS busid, enum Rotation rotation)
 	if (!started)
 		errx(1, "driver start failed");
 
-	// one or more drivers started OK
 	exit(0);
 }
 
@@ -1382,13 +1380,13 @@ start(enum HMC5883_BUS busid, enum Rotation rotation)
  */
 struct hmc5883_bus_option &find_bus(enum HMC5883_BUS busid)
 {
-	for (uint8_t i=0; i<NUM_BUS_OPTIONS; i++) {
+	for (unsigned i = 0; i < NUM_BUS_OPTIONS; i++) {
 		if ((busid == HMC5883_BUS_ALL ||
 		     busid == bus_options[i].busid) && bus_options[i].dev != NULL) {
 			return bus_options[i];
 		}
 	}	
-	errx(1,"bus %u not started", (unsigned)busid);
+	errx(1, "bus %u not started", (unsigned)busid);
 }
 
 
@@ -1625,6 +1623,8 @@ hmc5883_main(int argc, char *argv[])
 			} else {
 				errx(1, "calibration failed");
 			}
+		} else {
+			exit(0);
 		}
 	}
 
