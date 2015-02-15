@@ -183,6 +183,7 @@ private:
 		float y_roll_feedforward;
 		float y_integrator_max;
 		float y_coordinated_min_speed;
+		int32_t y_coordinated_method;
 		float y_rmax;
 
 		float airspeed_min;
@@ -225,6 +226,7 @@ private:
 		param_t y_roll_feedforward;
 		param_t y_integrator_max;
 		param_t y_coordinated_min_speed;
+		param_t y_coordinated_method;
 		param_t y_rmax;
 
 		param_t airspeed_min;
@@ -391,6 +393,7 @@ FixedwingAttitudeControl::FixedwingAttitudeControl() :
 	_parameter_handles.airspeed_max = param_find("FW_AIRSPD_MAX");
 
 	_parameter_handles.y_coordinated_min_speed = param_find("FW_YCO_VMIN");
+	_parameter_handles.y_coordinated_method = param_find("FW_YCO_METHOD");
 
 	_parameter_handles.trim_roll = param_find("TRIM_ROLL");
 	_parameter_handles.trim_pitch = param_find("TRIM_PITCH");
@@ -459,6 +462,7 @@ FixedwingAttitudeControl::parameters_update()
 	param_get(_parameter_handles.y_ff, &(_parameters.y_ff));
 	param_get(_parameter_handles.y_integrator_max, &(_parameters.y_integrator_max));
 	param_get(_parameter_handles.y_coordinated_min_speed, &(_parameters.y_coordinated_min_speed));
+	param_get(_parameter_handles.y_coordinated_method, &(_parameters.y_coordinated_method));
 	param_get(_parameter_handles.y_rmax, &(_parameters.y_rmax));
 
 	param_get(_parameter_handles.airspeed_min, &(_parameters.airspeed_min));
@@ -501,6 +505,7 @@ FixedwingAttitudeControl::parameters_update()
 	_yaw_ctrl.set_k_ff(_parameters.y_ff);
 	_yaw_ctrl.set_integrator_max(_parameters.y_integrator_max);
 	_yaw_ctrl.set_coordinated_min_speed(_parameters.y_coordinated_min_speed);
+	_yaw_ctrl.set_coordinated_method(_parameters.y_coordinated_method);
 	_yaw_ctrl.set_max_rate(math::radians(_parameters.y_rmax));
 
 	return OK;
@@ -949,6 +954,9 @@ FixedwingAttitudeControl::task_main()
 				control_input.speed_body_u = speed_body_u;
 				control_input.speed_body_v = speed_body_v;
 				control_input.speed_body_w = speed_body_w;
+				control_input.acc_body_x = _accel.x;
+				control_input.acc_body_y = _accel.y;
+				control_input.acc_body_z = _accel.z;
 				control_input.roll_setpoint = roll_sp;
 				control_input.pitch_setpoint = pitch_sp;
 				control_input.airspeed_min = _parameters.airspeed_min;
