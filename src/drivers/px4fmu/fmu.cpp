@@ -347,6 +347,8 @@ PX4FMU::init()
 
 	if (_class_instance == CLASS_DEVICE_PRIMARY) {
 		log("default PWM output device");
+	} else if (_class_instance < 0) {
+		log("FAILED registering class device");
 	}
 
 	/* reset GPIOs */
@@ -1938,7 +1940,7 @@ fmu_main(int argc, char *argv[])
 
 	fprintf(stderr, "FMU: unrecognised command %s, try:\n", verb);
 #if defined(CONFIG_ARCH_BOARD_PX4FMU_V1)
-	fprintf(stderr, "  mode_gpio, mode_serial, mode_pwm, mode_gpio_serial, mode_pwm_serial, mode_pwm_gpio, test\n");
+	fprintf(stderr, "  mode_gpio, mode_serial, mode_pwm, mode_gpio_serial, mode_pwm_serial, mode_pwm_gpio, test, fake, sensor_reset, id\n");
 #elif defined(CONFIG_ARCH_BOARD_PX4FMU_V2) || defined(CONFIG_ARCH_BOARD_AEROCORE)
 	fprintf(stderr, "  mode_gpio, mode_pwm, test, sensor_reset [milliseconds], i2c <bus> <hz>\n");
 #endif

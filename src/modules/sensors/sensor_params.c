@@ -120,6 +120,19 @@ PARAM_DEFINE_FLOAT(CAL_GYRO0_ZSCALE, 1.0f);
 PARAM_DEFINE_INT32(CAL_MAG0_ID, 0);
 
 /**
+ * Rotation of magnetometer 0 relative to airframe.
+ *
+ * An internal magnetometer will force a value of -1, so a GCS
+ * should only attempt to configure the rotation if the value is
+ * greater than or equal to zero.
+ *
+ * @min -1
+ * @max 30
+ * @group Sensor Calibration
+ */
+PARAM_DEFINE_INT32(CAL_MAG0_ROT, 0);
+
+/**
  * Magnetometer X-axis offset
  *
  * @min -500.0
@@ -285,6 +298,19 @@ PARAM_DEFINE_FLOAT(CAL_GYRO1_ZSCALE, 1.0f);
 PARAM_DEFINE_INT32(CAL_MAG1_ID, 0);
 
 /**
+ * Rotation of magnetometer 1 relative to airframe.
+ *
+ * An internal magnetometer will force a value of -1, so a GCS
+ * should only attempt to configure the rotation if the value is
+ * greater than or equal to zero.
+ *
+ * @min -1
+ * @max 30
+ * @group Sensor Calibration
+ */
+PARAM_DEFINE_INT32(CAL_MAG1_ROT, 0);
+
+/**
  * Magnetometer X-axis offset
  *
  * @min -500.0
@@ -448,6 +474,19 @@ PARAM_DEFINE_FLOAT(CAL_GYRO2_ZSCALE, 1.0f);
  * @group Sensor Calibration
  */
 PARAM_DEFINE_INT32(CAL_MAG2_ID, 0);
+
+/**
+ * Rotation of magnetometer 2 relative to airframe.
+ *
+ * An internal magnetometer will force a value of -1, so a GCS
+ * should only attempt to configure the rotation if the value is
+ * greater than or equal to zero.
+ *
+ * @min -1
+ * @max 30
+ * @group Sensor Calibration
+ */
+PARAM_DEFINE_INT32(CAL_MAG2_ROT, 0);
 
 /**
  * Magnetometer X-axis offset
