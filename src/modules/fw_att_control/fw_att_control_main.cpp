@@ -1079,7 +1079,8 @@ FixedwingAttitudeControl::task_main()
 
 			/* Only publish if any of the proper modes are enabled */
 			if(_vcontrol_mode.flag_control_rates_enabled ||
-			   _vcontrol_mode.flag_control_attitude_enabled)
+               _vcontrol_mode.flag_control_attitude_enabled ||
+               _vcontrol_mode.flag_control_manual_enabled)
 			{
 				/* publish the actuator controls */
 				if (_actuators_0_pub > 0) {
@@ -1119,7 +1120,7 @@ FixedwingAttitudeControl::start()
 	_control_task = task_spawn_cmd("fw_att_control",
 				       SCHED_DEFAULT,
 				       SCHED_PRIORITY_MAX - 5,
-				       2048,
+				       1600,
 				       (main_t)&FixedwingAttitudeControl::task_main_trampoline,
 				       nullptr);
 

@@ -127,6 +127,7 @@ private:
 	void handle_message_radio_status(mavlink_message_t *msg);
 	void handle_message_manual_control(mavlink_message_t *msg);
 	void handle_message_heartbeat(mavlink_message_t *msg);
+	void handle_message_ping(mavlink_message_t *msg);
 	void handle_message_request_data_stream(mavlink_message_t *msg);
 	void handle_message_system_time(mavlink_message_t *msg);
 	void handle_message_timesync(mavlink_message_t *msg);
@@ -182,10 +183,12 @@ private:
 	bool _hil_local_proj_inited;
 	float _hil_local_alt0;
 	struct map_projection_reference_s _hil_local_proj_ref;
+	struct offboard_control_mode_s _offboard_control_mode;
+	struct vehicle_rates_setpoint_s _rates_sp;
 	double _time_offset_avg_alpha;
 	uint64_t _time_offset;
 
 	/* do not allow copying this class */
-	MavlinkReceiver(const MavlinkReceiver&);
-	MavlinkReceiver operator=(const MavlinkReceiver&);
+	MavlinkReceiver(const MavlinkReceiver &);
+	MavlinkReceiver operator=(const MavlinkReceiver &);
 };

@@ -109,6 +109,11 @@ then
 	set PWM_DISARMED none
 	set PWM_MIN none
 	set PWM_MAX none
+	set PWM_AUX_OUT none
+	set PWM_AUX_RATE none
+	set PWM_AUX_DISARMED none
+	set PWM_AUX_MIN none
+	set PWM_AUX_MAX none
 	set MK_MODE none
 	set FMU_MODE pwm
 	set MAVLINK_F default
@@ -200,8 +205,13 @@ then
 
 			if px4io start
 			then
+				# try to safe px4 io so motor outputs dont go crazy
 				if px4io safety_on
 				then
+					# success! no-op
+				else
+					# px4io did not respond to the safety command
+					px4io stop
 				fi
 			fi
 
@@ -621,7 +631,7 @@ then
 		# Start standard rover apps
 		if [ $LOAD_DAPPS == yes ]
 		then
-			sh /etc/init.d/rc.rover_apps
+			sh /etc/init.d/rc.axialracing_ax10_apps
 		fi
 	fi
 
