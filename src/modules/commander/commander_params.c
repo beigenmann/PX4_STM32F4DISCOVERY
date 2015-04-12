@@ -176,3 +176,15 @@ PARAM_DEFINE_FLOAT(COM_EF_TIME, 10.0f);
  * @max 35
  */
 PARAM_DEFINE_FLOAT(COM_RC_LOSS_T, 0.5);
+
+/** Autosaving of params
+ *
+ * If not equal to zero the commander will automatically save parameters to persistent storage once changed.
+ * Default is on, as the interoperability with currently deployed GCS solutions depends on parameters
+ * being sticky. Developers can default it to off.
+ *
+ * @group commander
+ * @min 0
+ * @max 1
+ */
+PARAM_DEFINE_INT32(COM_AUTOS_PAR, 1);
