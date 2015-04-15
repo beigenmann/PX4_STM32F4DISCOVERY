@@ -1,6 +1,6 @@
 /****************************************************************************
  *
- *   Copyright (C) 2012-2013 PX4 Development Team. All rights reserved.
+ *   Copyright (c) 2015 PX4 Development Team. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -32,16 +32,16 @@
  ****************************************************************************/
 
 /**
- * @file multirotor_motor_limits.h
- *
- * Definition of multirotor_motor_limits  topic
+ * @file time_offset.h
+ * Time synchronisation offset
  */
 
-#ifndef MULTIROTOR_MOTOR_LIMITS_H_
-#define MULTIROTOR_MOTOR_LIMITS_H_
+#ifndef TOPIC_TIME_OFFSET_H_
+#define TOPIC_TIME_OFFSET_H_
 
-#include "../uORB.h"
 #include <stdint.h>
+#include <stdbool.h>
+#include "../uORB.h"
 
 /**
  * @addtogroup topics
@@ -49,13 +49,12 @@
  */
 
 /**
- * Motor limits
+ * Timesync offset for synchronisation with companion computer, GCS, etc.
  */
-struct multirotor_motor_limits_s {
-        uint8_t lower_limit	: 1; // at least one actuator command has saturated on the lower limit
-        uint8_t upper_limit	: 1; // at least one actuator command has saturated on the upper limit
-        uint8_t yaw			: 1; // yaw limit reached
-        uint8_t reserved	: 5; // reserved
+struct time_offset_s {
+
+	uint64_t offset_ns;		/**< time offset between companion system and PX4, in nanoseconds */
+
 };
 
 /**
@@ -63,6 +62,6 @@ struct multirotor_motor_limits_s {
  */
 
 /* register this as object request broker structure */
-ORB_DECLARE(multirotor_motor_limits);
+ORB_DECLARE(time_offset);
 
-#endif
+#endif /* TOPIC_TIME_OFFSET_H_ */
